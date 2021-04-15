@@ -1,0 +1,76 @@
+version: '3.7'
+
+services:
+
+  prometheus:
+    image: prom/prometheus
+    container_name: dd-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+    labels:
+        # Metric selection
+        # All: ["*"], 
+        # With specific extension: ["*_seconds"],
+        # Not finishing by: ["*[!s]"]
+        com.datadoghq.ad.check_names: '["openmetrics", "openmetrics", "openmetrics"]'
+        com.datadoghq.ad.init_configs: '[{}, {}, {}]'
+        # Three configurations
+        # The first one send histograms as distribution metrics
+        # The second one send histograms with `send_monotonic_counter:false`
+        # The third one send histograms with `send_monotonic_counter:false`
+        com.datadoghq.ad.instances: '[
+          {
+            "prometheus_url":"http://%%host%%:9090/metrics",
+            "send_distribution_buckets":true,
+            "send_histogram_buckets":false,
+            "namespace":"distrib_",
+            "metrics":["*"]
+          },
+          {
+            "prometheus_url":"http://%%host%%:9090/metrics",
+            "send_distribution_buckets":false,
+            "send_monotonic_counter":false,
+            "namespace":"hist_",
+            "metrics":["*"]
+          },
+          {
+            "prometheus_url":"http://%%host%%:9090/metrics",
+            "send_distribution_buckets":false,
+            "send_monotonic_counter":true,
+            "namespace":"histm_",
+            "metrics":["*"]
+          }]'
+
+  datadog:
+    container_name: datadog-agent
+    image: datadog/agent:latest
+    environment:
+      ## GLOBALS
+      - DD_API_KEY
+      - DD_SITE
+      - DD_HOSTNAME=narbais.sandbox
+      - DD_TAGS=env:local team:ddogcrew
+      - DD_AC_EXCLUDE=name:datadog-agent # exclude this container from data collection
+      ## TAGS
+      - DD_DOCKER_LABELS_AS_TAGS=true
+      - DD_DOCKER_ENV_AS_TAGS=true
+      ## APM https://docs.datadoghq.com/agent/docker/apm/
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      ## LOGS https://docs.datadoghq.com/agent/docker/log/
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      ## LIVE PROCESSES https://docs.datadoghq.com/graphing/infrastructure/process/?tab=docker
+      - DD_PROCESS_AGENT_ENABLED=true
+      ## DOGSTATSD
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+    ports:
+      - 8126:8126/tcp # APM available from any host
+      - 8125:8125/udp # Dogstatsd
+    volumes:
+     - /var/run/docker.sock:/var/run/docker.sock:ro
+     - /proc/:/host/proc/:ro
+     - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+     - /etc/passwd:/etc/passwd:ro # LIVE PROCESSES
