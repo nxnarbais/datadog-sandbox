@@ -30,5 +30,8 @@ Thumbs.db
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresen
 
+# Node
+node_modules
+
 # Archive
 archive

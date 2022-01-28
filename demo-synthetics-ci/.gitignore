@@ -1,7 +1,0 @@
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# credentials
-datadog-ci.json
