@@ -1,17 +1,17 @@
 
-variable "threshold_per_metric_name" {
+variable "threshold_per_index" {
   description = "Maximum cardinality for a metric"
-  default = 20000
+  default = 10000000
 }
 
-variable "minimum_cardinality" {
+variable "threshold_per_service" {
+  description = "Maximum cardinality for a metric"
+  default = 1000000
+}
+
+variable "minimum_service_volume" {
   description = "Minimum cardinality to trigger an alert"
-  default = 1000
-}
-
-variable "metric_name_filter_for_soft_quota" {
-  description = "Metric names to exclude from soft quota alert"
-  default = "!metric_name:my_metric.abc1,!metric_name:another_metric.name2"
+  default = 300000
 }
 
 variable "by_tag_keys" {
@@ -41,13 +41,8 @@ variable "tags" {
   default = []
 }
 
-variable "metric_namespace" {
-  description = "Selection of a metric namespace e.g. `my_service.*`"
-  default = "*"
-}
-
 variable "context_filter" {
   description = "Context filter"
-  default = "*"
+  default = "team:*"
   # default = "team:abc"
 }

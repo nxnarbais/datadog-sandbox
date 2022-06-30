@@ -15,5 +15,5 @@ ${notifications_alert}
 {{/is_alert}}
 
 {{#is_recovery}}
-Alert | Metric {{metric_name.name}} cardinality is back in an acceptable state.
+Recovery | Metric {{metric_name.name}} cardinality is back in an acceptable state.
 {{/is_recovery}}

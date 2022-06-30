@@ -15,5 +15,5 @@ ${notifications_alert}
 {{/is_alert}}
 
 {{#is_recovery}}
-Alert | Overall custom metric volume is back to normal.
+Recovery | Overall custom metric volume is back to normal.
 {{/is_recovery}}

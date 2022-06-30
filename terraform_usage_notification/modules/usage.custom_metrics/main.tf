@@ -29,6 +29,7 @@ EOF
     critical          = var.threshold_per_metric_name
   }
   include_tags        = true
+  priority            = 3
   tags                = concat(["standard:true", "terraform:true", "type:usage_monitor", "sku:metric", "owner:${var.owner}"], var.tags)
 }
 
@@ -55,6 +56,7 @@ EOF
     critical          = 1
   }
   include_tags        = true
+  priority            = 3
   tags                = concat(["standard:true", "terraform:true", "type:usage_monitor", "sku:metric", "owner:${var.owner}"], var.tags)
 }
 
@@ -72,7 +74,7 @@ data "template_file" "message_anomaly" {
 
 resource "datadog_monitor" "usage_custom_metric_anomalies" {
   type                = "metric alert"
-  name                = "[Usage][CustomMetrics][ForComposite] Anomaly on {{metric_name.value}}"
+  name                = "[Usage][CustomMetrics][ForComposite] Anomaly on {{metric_name.name}}"
   query               = <<EOF
 avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace},!metric_name:metric_to_exclude} by {metric_name}, 'agile', 3, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
@@ -81,6 +83,7 @@ EOF
     critical          = 1
   }
   include_tags        = true
+  priority            = 5
   tags                = concat(["composite:true", "standard:true", "terraform:true", "type:usage_monitor", "sku:metric", "owner:${var.owner}"], var.tags)
 }
 
@@ -95,16 +98,18 @@ EOF
     critical          = var.minimum_cardinality
   }
   include_tags        = true
+  priority            = 5
   tags                = concat(["composite:true", "standard:true", "terraform:true", "type:usage_monitor", "sku:metric", "owner:${var.owner}"], var.tags)
 }
 
 resource "datadog_monitor" "usage_custom_metric_anomalies_with_minimum_threshold" {
-  name    = "[Usage][CustomMetrics] Anomaly on {{metric_name.value}} (with minimum threshold)"
+  name    = "[Usage][CustomMetrics] Anomaly on {{metric_name.name}} (with minimum threshold)"
   type    = "composite"
   query   = "${datadog_monitor.usage_custom_metric_anomalies.id} && !${datadog_monitor.usage_custom_metric_minimum_cardinality.id}"
   message = data.template_file.message_anomaly.rendered
 
   include_tags        = true
+  priority            = 3
   tags                = concat(["standard:true", "terraform:true", "type:usage_monitor", "sku:metric", "owner:${var.owner}"], var.tags)
 }
 
@@ -131,5 +136,6 @@ EOF
     critical          = 1
   }
   include_tags        = true
+  priority            = 3
   tags                = concat(["standard:true", "terraform:true", "type:usage_monitor", "sku:metric", "owner:${var.owner}"], var.tags)
 }
