@@ -64,3 +64,16 @@ module "main_usage_ingested_logs" {
   }
   owner = var.owner
 }
+
+module "main_usage_indexed_spans" {
+  source = "./modules/usage.indexed_spans"
+  threshold_per_cluster     = 10000000
+  threshold_per_service   = 1000000
+  minimum_service_volume  = 50000
+  by_tag_keys = "cost_center,department,team"
+  context_filter = "service:*"
+  notifications = {
+    alert = "${var.notifications.email}"
+  }
+  owner = var.owner
+}
