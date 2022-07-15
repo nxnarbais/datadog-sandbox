@@ -8,9 +8,9 @@ terraform {
 
 ######################
 
-data "template_file" "message_quota" {
+data "template_file" "message_quota_by_metric" {
   template = file(
-    "${path.module}/message_quota.tpl",
+    "${path.module}/message_quota_by_metric.tpl",
   )
 
   vars = {
@@ -24,7 +24,7 @@ resource "datadog_monitor" "usage_custom_metric_quota" {
   query               = <<EOF
 avg(last_15m):sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace}} by {metric_name} > ${var.threshold_per_metric_name}
 EOF
-  message = data.template_file.message_quota.rendered
+  message = data.template_file.message_quota_by_metric.rendered
   monitor_thresholds {
     critical          = var.threshold_per_metric_name
   }
@@ -35,9 +35,9 @@ EOF
 
 ######################
 
-data "template_file" "message_global_anomaly" {
+data "template_file" "message_anomaly_global" {
   template = file(
-    "${path.module}/message_global_anomaly.tpl",
+    "${path.module}/message_anomaly_global.tpl",
   )
 
   vars = {
@@ -51,7 +51,7 @@ resource "datadog_monitor" "usage_custom_metric_global_anomalies" {
   query               = <<EOF
 avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom{*}, 'agile', 3, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
-  message = data.template_file.message_global_anomaly.rendered
+  message = data.template_file.message_anomaly_global.rendered
   monitor_thresholds {
     critical          = 1
   }
@@ -62,9 +62,9 @@ EOF
 
 ######################
 
-data "template_file" "message_anomaly" {
+data "template_file" "message_anomaly_by_metric" {
   template = file(
-    "${path.module}/message_anomaly.tpl",
+    "${path.module}/message_anomaly_by_metric.tpl",
   )
 
   vars = {
@@ -106,7 +106,7 @@ resource "datadog_monitor" "usage_custom_metric_anomalies_with_minimum_threshold
   name    = "[Usage][CustomMetrics] Anomaly on {{metric_name.name}} (with minimum threshold)"
   type    = "composite"
   query   = "${datadog_monitor.usage_custom_metric_anomalies.id} && !${datadog_monitor.usage_custom_metric_minimum_cardinality.id}"
-  message = data.template_file.message_anomaly.rendered
+  message = data.template_file.message_anomaly_by_metric.rendered
 
   include_tags        = true
   priority            = 3
@@ -117,7 +117,7 @@ resource "datadog_monitor" "usage_custom_metric_anomalies_with_minimum_threshold
 
 data "template_file" "message_anomaly_by_context" {
   template = file(
-    "${path.module}/message_anomaly.tpl",
+    "${path.module}/message_anomaly_by_context.tpl",
   )
 
   vars = {

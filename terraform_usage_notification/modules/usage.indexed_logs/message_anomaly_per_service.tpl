@@ -1,13 +1,15 @@
 {{#is_alert}}
 Alert | Service {{service.name}} indexed log volume has an weird behavior.
 
+*This monitor ensures that any overall log index volume per service does not spike unexpectly without notifying the relevant team.*
+
 Instructions:
 
-- Check the index volume
+- Check the service volume
 - Identify outliers
 - Adjust exclusion filters if need be
 
-TODO: Add more details
+For more details, check this [Logging without Limits guide](https://docs.datadoghq.com/logs/guide/getting-started-lwl)
 
 ${notifications_alert}
 {{/is_alert}}

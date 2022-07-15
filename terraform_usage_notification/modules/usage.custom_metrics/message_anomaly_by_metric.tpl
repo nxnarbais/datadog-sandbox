@@ -1,7 +1,7 @@
 {{#is_alert}}
-Alert | Metric context has an weird behavior.
+Alert | Metric {{metric_name.name}} has an weird behavior.
 
-*This monitor ensures that any overall metric volume from a specific context does not spike unexpectly without notifying the relevant team.*
+*This monitor ensures that any metric name cardinality does not spike unexpectly without notifying the relevant team.*
 
 Instructions:
 
@@ -14,5 +14,5 @@ ${notifications_alert}
 {{/is_alert}}
 
 {{#is_recovery}}
-Recovery | Metric context cardinality is back to normal.
+Recovery | Metric {{metric_name.name}} cardinality is back to normal.
 {{/is_recovery}}

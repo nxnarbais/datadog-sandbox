@@ -1,13 +1,16 @@
 {{#is_alert}}
 Alert | Index {{index_name.name}} volume has reached a soft quota.
 
+*This monitor ensures that any overall log index volume per index does not exceed a defined limit.*
+
 Instructions:
 
 - Check the index volume
 - Identify outliers
 - Adjust exclusion filters if need be
+- Exclude this index from the monitor if this is an acceptable increase.
 
-TODO: Add more details
+For more details, check this [Logging without Limits guide](https://docs.datadoghq.com/logs/guide/getting-started-lwl)
 
 ${notifications_alert}
 {{/is_alert}}

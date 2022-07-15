@@ -8,9 +8,9 @@ terraform {
 
 ###################### QUOTAS 
 
-data "template_file" "message_index_quota" {
+data "template_file" "message_quota_by_index" {
   template = file(
-    "${path.module}/message_index_quota.tpl",
+    "${path.module}/message_quota_by_index.tpl",
   )
 
   vars = {
@@ -24,7 +24,7 @@ resource "datadog_monitor" "usage_indexed_log_index_quota" {
   query               = <<EOF
 sum(last_1h):sum:datadog.estimated_usage.logs.ingested_events{datadog_is_excluded:false,!datadog_index:some_index_to_exclude} by {datadog_index}.as_count() > ${var.threshold_per_index}
 EOF
-  message = data.template_file.message_index_quota.rendered
+  message = data.template_file.message_quota_by_index.rendered
   monitor_thresholds {
     critical          = var.threshold_per_index
   }
@@ -33,9 +33,9 @@ EOF
   tags                = concat(["standard:true", "terraform:true", "type:usage_monitor", "sku:indexed_logs", "owner:${var.owner}"], var.tags)
 }
 
-data "template_file" "message_service_quota" {
+data "template_file" "message_quota_by_service" {
   template = file(
-    "${path.module}/message_service_quota.tpl",
+    "${path.module}/message_quota_by_service.tpl",
   )
 
   vars = {
@@ -49,7 +49,7 @@ resource "datadog_monitor" "usage_index_log_service_quota" {
   query               = <<EOF
 sum(last_1h):sum:datadog.estimated_usage.logs.ingested_events{datadog_is_excluded:false,!datadog_index:some_index_to_exclude} by {service}.as_count() > ${var.threshold_per_service}
 EOF
-  message = data.template_file.message_service_quota.rendered
+  message = data.template_file.message_quota_by_service.rendered
   monitor_thresholds {
     critical          = var.threshold_per_service
   }

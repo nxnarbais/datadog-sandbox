@@ -1,7 +1,7 @@
 {{#is_alert}}
-Alert | Metric context has an weird behavior.
+Alert | Anomaly on overall custom metric volume.
 
-*This monitor ensures that any overall metric volume from a specific context does not spike unexpectly without notifying the relevant team.*
+*This monitor ensures that the overall volume of custom metric is consistent over time.*
 
 Instructions:
 
@@ -14,5 +14,5 @@ ${notifications_alert}
 {{/is_alert}}
 
 {{#is_recovery}}
-Recovery | Metric context cardinality is back to normal.
+Recovery | Overall custom metric volume is back to normal.
 {{/is_recovery}}
