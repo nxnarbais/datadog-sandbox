@@ -52,6 +52,19 @@ module "main_usage_indexed_logs" {
   owner = var.owner
 }
 
+module "main_usage_ingested_logs" {
+  source = "./modules/usage.ingested_logs"
+  threshold_per_index     = 10000000
+  threshold_per_service   = 1000000
+  minimum_service_volume  = 50000
+  by_tag_keys = "cost_center,department,team"
+  context_filter = "service:*"
+  notifications = {
+    alert = "${var.notifications.email}"
+  }
+  owner = var.owner
+}
+
 
 
 

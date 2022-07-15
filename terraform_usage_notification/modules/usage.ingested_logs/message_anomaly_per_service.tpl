@@ -1,7 +1,7 @@
 {{#is_alert}}
-Alert | Service {{service.name}} indexed log volume has an weird behavior.
+Alert | Service {{service.name}} ingested log volume has an weird behavior.
 
-*This monitor ensures that any overall indexed log volume per service does not spike unexpectly without notifying the relevant team.*
+*This monitor ensures that any overall ingested log volume per service does not spike unexpectly without notifying the relevant team.*
 
 Instructions:
 
@@ -15,5 +15,5 @@ ${notifications_alert}
 {{/is_alert}}
 
 {{#is_recovery}}
-Recovery | Service {{service.name}} indexed log volume is back to normal.
+Recovery | Service {{service.name}} ingested log volume is back to normal.
 {{/is_recovery}}

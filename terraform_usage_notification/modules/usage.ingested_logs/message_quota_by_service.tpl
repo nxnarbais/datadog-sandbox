@@ -1,7 +1,7 @@
 {{#is_alert}}
-Alert | Service {{service.name}} indexed log volume has reached a soft quota.
+Alert | Service {{service.name}} ingested log volume has reached a soft quota.
 
-*This monitor ensures that any overall indexed log volume per service does not exceed a defined limit.*
+*This monitor ensures that any overall ingested log volume per service does not exceed a defined limit.*
 
 Instructions:
 
@@ -16,5 +16,5 @@ ${notifications_alert}
 {{/is_alert}}
 
 {{#is_recovery}}
-Recovery | Service {{service.name}} indexed log volume is back in an acceptable state.
+Recovery | Service {{service.name}} ingested log volume is back in an acceptable state.
 {{/is_recovery}}

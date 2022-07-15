@@ -1,7 +1,7 @@
 {{#is_alert}}
-Alert | Selected context indexed log volume has an weird behavior.
+Alert | Selected context ingested log volume has an weird behavior.
 
-*This monitor ensures that any overall indexed log volume from a specific context does not spike unexpectly without notifying the relevant team.*
+*This monitor ensures that any overall ingested log volume from a specific context does not spike unexpectly without notifying the relevant team.*
 
 Instructions:
 
@@ -15,5 +15,5 @@ ${notifications_alert}
 {{/is_alert}}
 
 {{#is_recovery}}
-Recovery | Selected context indexed log volume is back to normal.
+Recovery | Selected context ingested log volume is back to normal.
 {{/is_recovery}}

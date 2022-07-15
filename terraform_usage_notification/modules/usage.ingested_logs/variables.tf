@@ -1,18 +1,19 @@
 
 variable "threshold_per_index" {
-  description = "Maximum indexed log volume for an index"
+  description = "Maximum ingested log volume for an index"
   default = 10000000
 }
 
 variable "threshold_per_service" {
-  description = "Maximum indexed log volume for a service"
+  description = "Maximum ingested log volume for a service"
   default = 1000000
 }
 
 variable "minimum_service_volume" {
-  description = "Minimum indexed log volume to trigger an anomaly"
+  description = "Minimum ingested log volume to trigger an anomaly"
   default = 300000
 }
+
 
 variable "by_tag_keys" {
   description = "Tag keys available in by_tag metrics"
