@@ -64,7 +64,3 @@ module "main_usage_ingested_logs" {
   }
   owner = var.owner
 }
-
-
-
-

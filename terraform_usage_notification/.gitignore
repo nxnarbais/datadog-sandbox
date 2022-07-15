@@ -25,4 +25,4 @@
 .terraform
 
 # Tests
-team_test*/
+team_test/**
