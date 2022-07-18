@@ -74,7 +74,7 @@ resource "datadog_monitor" "usage_indexed_logs_anomalies" {
   type                = "metric alert"
   name                = "[Usage][IndexedLogs][ForComposite] Anomaly on {{service.name}}"
   query               = <<EOF
-avg(last_1d):anomalies(sum:datadog.estimated_usage.logs.ingested_events{datadog_is_excluded:false,!datadog_index:some_index_to_exclude} by {service}.as_count(), 'agile', 3, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
+avg(last_1d):anomalies(sum:datadog.estimated_usage.logs.ingested_events{datadog_is_excluded:false,!datadog_index:some_index_to_exclude} by {service}.as_count(), 'agile', 5, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
   message = "N/A - Used with composite monitor to reduce alert fatigue"
   monitor_thresholds {
@@ -89,7 +89,7 @@ resource "datadog_monitor" "usage_indexed_logs_minimum_volume" {
   type                = "metric alert"
   name                = "[Usage][IndexedLogs][ForComposite] Minimum indexed log volume"
   query               = <<EOF
-sum(last_15m):sum:datadog.estimated_usage.logs.ingested_events{datadog_is_excluded:false,!datadog_index:some_index_to_exclude} by {service}.as_count() < ${var.minimum_service_volume}
+sum(last_1h):sum:datadog.estimated_usage.logs.ingested_events{datadog_is_excluded:false,!datadog_index:some_index_to_exclude} by {service}.as_count() < ${var.minimum_service_volume}
 EOF
   message = "N/A - Used with composite monitor to reduce alert fatigue"
   monitor_thresholds {
@@ -127,7 +127,7 @@ resource "datadog_monitor" "usage_indexed_logs_anomalies_by_context" {
   type                = "metric alert"
   name                = "[Usage][IndexedLogs] Anomaly on specific context"
   query               = <<EOF
-avg(last_1d):anomalies(sum:datadog.estimated_usage.logs.ingested_events{datadog_is_excluded:false,!datadog_index:some_index_to_exclude,${var.context_filter}} by {${var.by_tag_keys}}.as_count(), 'agile', 3, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
+avg(last_1d):anomalies(sum:datadog.estimated_usage.logs.ingested_events{datadog_is_excluded:false,!datadog_index:some_index_to_exclude,${var.context_filter}} by {${var.by_tag_keys}}.as_count(), 'agile', 5, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
   message = data.template_file.message_anomaly_per_context.rendered
   monitor_thresholds {

@@ -20,7 +20,7 @@ data "template_file" "message_quota_by_metric" {
 
 resource "datadog_monitor" "usage_custom_metric_quota" {
   type                = "metric alert"
-  name                = "[Usage][CustomMetrics] Soft limit reached on {{metric_name.value}}"
+  name                = "[Usage][CustomMetrics] Soft limit reached on metric {{metric_name.value}}"
   query               = <<EOF
 avg(last_15m):sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace}} by {metric_name} > ${var.threshold_per_metric_name}
 EOF
@@ -49,7 +49,7 @@ resource "datadog_monitor" "usage_custom_metric_global_anomalies" {
   type                = "metric alert"
   name                = "[Usage][CustomMetrics] Anomaly on overall custom metric volume"
   query               = <<EOF
-avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom{*}, 'agile', 3, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
+avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom{*}, 'agile', 5, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
   message = data.template_file.message_anomaly_global.rendered
   monitor_thresholds {
@@ -74,9 +74,9 @@ data "template_file" "message_anomaly_by_metric" {
 
 resource "datadog_monitor" "usage_custom_metric_anomalies" {
   type                = "metric alert"
-  name                = "[Usage][CustomMetrics][ForComposite] Anomaly on {{metric_name.name}}"
+  name                = "[Usage][CustomMetrics][ForComposite] Anomaly on metric {{metric_name.name}}"
   query               = <<EOF
-avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace},!metric_name:metric_to_exclude} by {metric_name}, 'agile', 3, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
+avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace},!metric_name:metric_to_exclude} by {metric_name}, 'agile', 5, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
   message = "N/A - Used with composite monitor to reduce alert fatigue"
   monitor_thresholds {
@@ -103,7 +103,7 @@ EOF
 }
 
 resource "datadog_monitor" "usage_custom_metric_anomalies_with_minimum_threshold" {
-  name    = "[Usage][CustomMetrics] Anomaly on {{metric_name.name}} (with minimum threshold)"
+  name    = "[Usage][CustomMetrics] Anomaly on metric {{metric_name.name}} (with minimum threshold)"
   type    = "composite"
   query   = "${datadog_monitor.usage_custom_metric_anomalies.id} && !${datadog_monitor.usage_custom_metric_minimum_cardinality.id}"
   message = data.template_file.message_anomaly_by_metric.rendered
@@ -129,7 +129,7 @@ resource "datadog_monitor" "usage_custom_metric_anomalies_by_context" {
   type                = "metric alert"
   name                = "[Usage][CustomMetrics] Anomaly on specific context"
   query               = <<EOF
-avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom.by_tag{${var.context_filter}} by {${var.by_tag_keys}}, 'agile', 3, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
+avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom.by_tag{${var.context_filter}} by {${var.by_tag_keys}}, 'agile', 5, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
   message = data.template_file.message_anomaly_by_context.rendered
   monitor_thresholds {
