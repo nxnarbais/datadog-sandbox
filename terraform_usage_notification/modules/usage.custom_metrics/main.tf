@@ -22,7 +22,7 @@ resource "datadog_monitor" "usage_custom_metric_quota" {
   type                = "metric alert"
   name                = "[Usage][CustomMetrics] Soft limit reached on metric {{metric_name.value}}"
   query               = <<EOF
-avg(last_15m):sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace}} by {metric_name} > ${var.threshold_per_metric_name}
+avg(last_4h):sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace}} by {metric_name} > ${var.threshold_per_metric_name}
 EOF
   message = data.template_file.message_quota_by_metric.rendered
   monitor_thresholds {
@@ -91,7 +91,7 @@ resource "datadog_monitor" "usage_custom_metric_minimum_cardinality" {
   type                = "metric alert"
   name                = "[Usage][CustomMetrics][ForComposite] Minimum Cardinality"
   query               = <<EOF
-avg(last_15m):sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace},!metric_name:metric_to_exclude} by {metric_name} < ${var.minimum_cardinality}
+avg(last_4h):sum:datadog.estimated_usage.metrics.custom.by_metric{metric_name:${var.metric_namespace},!metric_name:metric_to_exclude} by {metric_name} < ${var.minimum_cardinality}
 EOF
   message = "N/A - Used with composite monitor to reduce alert fatigue"
   monitor_thresholds {
@@ -129,7 +129,7 @@ resource "datadog_monitor" "usage_custom_metric_anomalies_by_context" {
   type                = "metric alert"
   name                = "[Usage][CustomMetrics] Anomaly on specific context"
   query               = <<EOF
-avg(last_1d):anomalies(sum:datadog.estimated_usage.metrics.custom.by_tag{${var.context_filter}} by {${var.by_tag_keys}}, 'agile', 5, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
+avg(last_2d):anomalies(sum:datadog.estimated_usage.metrics.custom.by_tag{${var.context_filter}} by {${var.by_tag_keys}}, 'agile', 5, direction='above', interval=300, alert_window='last_2h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
   message = data.template_file.message_anomaly_by_context.rendered
   monitor_thresholds {

@@ -22,7 +22,7 @@ resource "datadog_monitor" "usage_indexed_span_index_quota" {
   type                = "metric alert"
   name                = "[Usage][IndexedSpans] Soft limit reached on {{kube_cluster_name.name}}"
   query               = <<EOF
-sum(last_1h):datadog.estimated_usage.apm.indexed_spans_by_host{!kube_cluster_name:some_cluster_name} by {kube_cluster_name}.as_count() > ${var.threshold_per_cluster}
+sum(last_4h):datadog.estimated_usage.apm.indexed_spans_by_host{!kube_cluster_name:some_cluster_name} by {kube_cluster_name}.as_count() > ${var.threshold_per_cluster}
 EOF
   message = data.template_file.message_quota_by_cluster.rendered
   monitor_thresholds {
@@ -47,7 +47,7 @@ resource "datadog_monitor" "usage_index_span_service_quota" {
   type                = "metric alert"
   name                = "[Usage][IndexedSpans] Soft limit reached on {{service.name}}"
   query               = <<EOF
-sum(last_1h):datadog.estimated_usage.apm.indexed_spans{!service:some_service} by {service}.as_count() > ${var.threshold_per_service}
+sum(last_4h):datadog.estimated_usage.apm.indexed_spans{!service:some_service} by {service}.as_count() > ${var.threshold_per_service}
 EOF
   message = data.template_file.message_quota_by_service.rendered
   monitor_thresholds {
@@ -89,7 +89,7 @@ resource "datadog_monitor" "usage_indexed_spans_minimum_volume" {
   type                = "metric alert"
   name                = "[Usage][IndexedSpans][ForComposite] Minimum indexed span volume"
   query               = <<EOF
-sum(last_1h):sum:datadog.estimated_usage.apm.indexed_spans{!service:some_service} by {service}.as_count() < ${var.minimum_service_volume}
+sum(last_4h):sum:datadog.estimated_usage.apm.indexed_spans{!service:some_service} by {service}.as_count() < ${var.minimum_service_volume}
 EOF
   message = "N/A - Used with composite monitor to reduce alert fatigue"
   monitor_thresholds {
@@ -127,7 +127,7 @@ resource "datadog_monitor" "usage_indexed_spans_anomalies_by_context" {
   type                = "metric alert"
   name                = "[Usage][IndexedSpans] Anomaly on specific context"
   query               = <<EOF
-avg(last_1d):anomalies(sum:datadog.estimated_usage.apm.indexed_spans.by_tag{!team:abc,${var.context_filter}} by {${var.by_tag_keys}}.as_count(), 'agile', 5, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
+avg(last_2d):anomalies(sum:datadog.estimated_usage.apm.indexed_spans.by_tag{!team:abc,${var.context_filter}} by {${var.by_tag_keys}}.as_count(), 'agile', 5, direction='above', interval=300, alert_window='last_2h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
   message = data.template_file.message_anomaly_per_context.rendered
   monitor_thresholds {

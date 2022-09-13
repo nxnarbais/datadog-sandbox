@@ -22,7 +22,7 @@ resource "datadog_monitor" "usage_ingested_log_index_quota" {
   type                = "metric alert"
   name                = "[Usage][IngestedLogs] Soft limit reached on {{datadog_index.name}}"
   query               = <<EOF
-sum(last_1h):sum:datadog.estimated_usage.logs.ingested_bytes{!datadog_index:some_index_to_exclude} by {datadog_index}.as_count() > ${var.threshold_per_index}
+sum(last_4h):sum:datadog.estimated_usage.logs.ingested_bytes{!datadog_index:some_index_to_exclude} by {datadog_index}.as_count() > ${var.threshold_per_index}
 EOF
   message = data.template_file.message_quota_by_index.rendered
   monitor_thresholds {
@@ -47,7 +47,7 @@ resource "datadog_monitor" "usage_index_log_service_quota" {
   type                = "metric alert"
   name                = "[Usage][IngestedLogs] Soft limit reached on {{service.name}}"
   query               = <<EOF
-sum(last_1h):sum:datadog.estimated_usage.logs.ingested_bytes{!datadog_index:some_index_to_exclude} by {service}.as_count() > ${var.threshold_per_service}
+sum(last_4h):sum:datadog.estimated_usage.logs.ingested_bytes{!datadog_index:some_index_to_exclude} by {service}.as_count() > ${var.threshold_per_service}
 EOF
   message = data.template_file.message_quota_by_service.rendered
   monitor_thresholds {
@@ -89,7 +89,7 @@ resource "datadog_monitor" "usage_ingested_logs_minimum_volume" {
   type                = "metric alert"
   name                = "[Usage][IngestedLogs][ForComposite] Minimum ingested log volume"
   query               = <<EOF
-sum(last_1h):sum:datadog.estimated_usage.logs.ingested_bytes{!datadog_index:some_index_to_exclude} by {service}.as_count() < ${var.minimum_service_volume}
+sum(last_4h):sum:datadog.estimated_usage.logs.ingested_bytes{!datadog_index:some_index_to_exclude} by {service}.as_count() < ${var.minimum_service_volume}
 EOF
   message = "N/A - Used with composite monitor to reduce alert fatigue"
   monitor_thresholds {
@@ -127,7 +127,7 @@ resource "datadog_monitor" "usage_ingested_logs_anomalies_by_context" {
   type                = "metric alert"
   name                = "[Usage][IngestedLogs] Anomaly on specific context"
   query               = <<EOF
-avg(last_1d):anomalies(sum:datadog.estimated_usage.logs.ingested_bytes{!datadog_index:some_index_to_exclude,${var.context_filter}} by {${var.by_tag_keys}}.as_count(), 'agile', 5, direction='above', interval=300, alert_window='last_1h', count_default_zero='true', seasonality='weekly') >= 1
+avg(last_2d):anomalies(sum:datadog.estimated_usage.logs.ingested_bytes{!datadog_index:some_index_to_exclude,${var.context_filter}} by {${var.by_tag_keys}}.as_count(), 'agile', 5, direction='above', interval=300, alert_window='last_2h', count_default_zero='true', seasonality='weekly') >= 1
 EOF
   message = data.template_file.message_anomaly_per_context.rendered
   monitor_thresholds {
