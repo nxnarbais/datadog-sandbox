@@ -6,7 +6,7 @@ compare to the period before the account owner can be notified.*
 
 Instructions:
 
-- Investigate main outlier
+- Investigate main outlier - [dashboard](#)
 - Contact owner to understand reason and adjust accordingly
 
 ${notifications_alert}

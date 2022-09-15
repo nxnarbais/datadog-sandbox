@@ -14,6 +14,7 @@ variable "threshold_pct_change" {
     synthetics_browser = 5
     rum_session_mobile = 5
     rum_session_replay = 5
+    npm_host = 5
   }
 }
 

@@ -102,7 +102,7 @@ EOF
 
 resource "datadog_monitor" "usage_apm_indexed_spans_pct_increase" {
   type                = "metric alert"
-  name                = "[Usage][Global][APM Indexed Bytes] Increase >${var.threshold_pct_change.apm_indexed_spans}%"
+  name                = "[Usage][Global][APM Indexed Spans] Increase >${var.threshold_pct_change.apm_indexed_spans}%"
   query               = <<EOF
 pct_change(avg(last_1w),last_1mo):sum:datadog.estimated_usage.apm.indexed_spans{*}.as_count() > ${var.threshold_pct_change.apm_indexed_spans}
 EOF
@@ -257,4 +257,27 @@ EOF
   include_tags        = true
   priority            = 3
   tags                = concat(["standard:true", "terraform:true", "type:usage_monitor", "sku:rum_session_replay", "owner:${var.owner}"], var.tags)
+}
+
+######################
+
+resource "datadog_monitor" "usage_npm_host_pct_increase" {
+  type                = "metric alert"
+  name                = "[Usage][Global][NPM Host] Increase >${var.threshold_pct_change.npm_host}%"
+  query               = <<EOF
+pct_change(avg(last_1w),last_1mo):sum:datadog.estimated_usage.network.hosts{*} > ${var.threshold_pct_change.npm_host}
+EOF
+  message = templatefile(
+    "${path.module}/message_usage_pct_increase.tpl",
+    {
+      sku = "NPM Host"
+      notifications_alert = var.notifications.alert
+    }
+  )
+  monitor_thresholds {
+    critical          = var.threshold_pct_change.npm_host
+  }
+  include_tags        = true
+  priority            = 3
+  tags                = concat(["standard:true", "terraform:true", "type:usage_monitor", "sku:npm_host", "owner:${var.owner}"], var.tags)
 }
