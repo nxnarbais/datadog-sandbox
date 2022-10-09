@@ -1,0 +1,69 @@
+version: '3.7'
+
+services:
+
+  node:
+    image: "node:16-slim"
+    container_name: dd-node
+    working_dir: /home/node/app
+    environment:
+      - OTEL_SERVICE_NAME=snoopy
+      - OTEL_LOG_LEVEL=DEBUG
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4318
+      - OTEL_RESOURCE_ATTRIBUTES=env=demo,service.namespace=sandbox,service.version=0.1.2,owner=ddog,deployment=blue
+      # - OTEL_EXPORTER_OTLP_HEADERS="made=with_love_from_tps”
+    volumes:
+      - ../:/home/node/app
+    ports:
+      - 3000:3000/tcp
+    # command: "node --require './tracing.js' server.js"
+    command: "npm run start"
+    links:
+      - otel-collector
+  
+  # Collector
+  otel-collector:
+    container_name: otelcol
+    # image: otel/opentelemetry-collector:0.61.0
+    image: otel/opentelemetry-collector-contrib:0.61.0 # with the datadog exporter
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ../otel-conf/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "1888:1888"   # pprof extension
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP http receiver
+      - "55679:55679" # zpages extension
+    env_file:
+      - ../.env
+    # environment:
+    #   - DD_SITE
+    #   - DD_API_KEY
+    links:
+      - jaeger
+  
+  # Jaeger
+  # Get started: https://www.jaegertracing.io/docs/1.38/getting-started/
+  jaeger:
+    container_name: jaeger_app
+    image: jaegertracing/all-in-one:1.38
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      # - 4317:4317
+      # - 4318:4318
+      - 4319:4317 # custom exposed port
+      - 4320:4318 # custom exposed port
+      - 5778:5778
+      - 16686:16686
+      - 14268:14268
+      - 14269:14269
+      - 14250:14250
+      - 9411:9411

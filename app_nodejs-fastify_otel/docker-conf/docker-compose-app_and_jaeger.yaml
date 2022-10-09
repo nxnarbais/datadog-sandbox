@@ -11,10 +11,11 @@ services:
       - OTEL_LOG_LEVEL=DEBUG
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger_app:4318
     volumes:
-      - ./:/home/node/app
+      - ../:/home/node/app
     ports:
       - 3000:3000/tcp
-    command: "node --require './tracing.js' server.js"
+    # command: "node --require './tracing.js' server.js"
+    command: "npm run start"
     links:
       - jaeger
 

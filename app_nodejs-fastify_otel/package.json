@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "node server"
+    "start": "node --require './tracing.js' server.js",
+    "start-logs": "node --require './tracing_in_logs.js' server.js"
   },
   "author": "",
   "license": "ISC",
