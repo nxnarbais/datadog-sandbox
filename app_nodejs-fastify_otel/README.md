@@ -55,6 +55,7 @@ FIXME: otlphttp exporter is not working
 
 ### Jaeger endpoints
 
+- Get started [doc](https://www.jaegertracing.io/docs/1.38/getting-started/)
 - [Main endpoint](http://localhost:16686/)
 - Metrics [endpoint](http://localhost:8888/metrics)
 - Uptime [endpoint](http://localhost:13133/)

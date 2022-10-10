@@ -1,65 +1,95 @@
-// UNCOMMENT #1
-// // This line must come before importing any instrumented module.
-// const tracer = require('dd-trace').init({
-//   // logInjection: true, // UNCOMMENT #5
-// });
-
 // Require the framework and instantiate it
 const fastify = require('fastify')({ logger: true })
 // const https = require('https');
-// const opentelemetry = require("@opentelemetry/api");
+const axios = require('axios');
+const opentelemetry = require("@opentelemetry/api");
+// const { trace } = require('console');
 
-// const tracer = opentelemetry.trace.getTracer(
-//   'my-service-tracer'
-// );
+const getTracer = () => (opentelemetry.trace.getTracer(
+  'my-service-tracer'
+))
 
 fastify.get('/', async (request, reply) => {
+  const tracer = getTracer()
+
+  const doWork = (i) => {
+    tracer.startActiveSpan(`doWork:${i}`, span => {
+      // simulate some random work.
+      const random_number = Math.floor(Math.random() * 40000000)
+      for (let i = 0; i <= random_number; i += 1) {
+        // empty
+        span.setAttribute('random_number', random_number);
+      }
+      span.addEvent('Doing some real work here'); // Span event
+      // Make sure to end this child span! If you don't,
+      // it will continue to track work beyond 'doWork'!
+      span.end();
+    });
+  }
+
+  // Create a span. A span must be closed.
+  tracer.startActiveSpan(
+    'home_process_span', 
+    { attributes: { custom_attribute: 'value1' }},
+    span => {
+      for (let i = 0; i < 10; i += 1) {
+        doWork(i)
+      }
+      // Be sure to end the span!
+      span.end();
+    }
+  );
+
+  tracer.startActiveSpan('home_parallel_process_span', span => {
+    Promise.all([doWork(100), doWork(200)]).then(() => {
+      span.end();
+    });
+  })
+
   return { hello: 'world' }
 })
-
-// fastify.get('/', async (request, reply) => {
-//   // https.get("https://jsonplaceholder.typicode.com/todos/1", (incoming) => {
-//   //   let span = tracer.startSpan("reading-todo");
-//   //   incoming.on("data", (data) => {
-//   //     span.setAttribute("title", JSON.parse(data).title)
-//   //   });
-//   //   incoming.on("end", (data) => {
-//   //     span.end();
-//   //     return { hello: 'world', data }
-//   //     // res.send("OK")
-//   //   });
-
-//   // });
-//   return { hello: 'world' }
-// })
 
 // This will add the location as an attribute of the span
 // This attribute can be made searchable on Trace Search and Analytics
 // since it is set on the root span
 const addSpanWithLocation = (location) => {
   // UNCOMMENT #2
-  // const span = tracer.scope().active();
-  // if (span) {
-  //   const parent = span.context()._trace.started[0];
-  //   parent.setTag('location', location);
-  // }
+  const activeSpan = opentelemetry.trace.getActiveSpan();
+  if (activeSpan) {
+    activeSpan.setAttribute('location-childspan', location);
+  }
+  // TODO: Set attribute on parent span
+  // const context = activeSpan.getSpanContext()
 };
 
 const callToExternalService = () => { return { list: ["rantanplan","idefix"], total_count: 300, page: 1} };
 const processSomething = async () => {
   let resProcessed = undefined
+
   // UNCOMMENT #3
-  // const traceOptions = {};
-  // resProcessed = await tracer.trace('process.something', traceOptions, async () => {
-  //   const resProcessed = await callToExternalService();
-  //   const activeSpan = tracer.scope().active();
-  //   activeSpan.setTag('result', resProcessed);
-  //   return resProcessed;
-  // })
+  const tracer = getTracer()
+  resProcessed = tracer.startActiveSpan('process.something', async span => {
+      const resProcessed = await callToExternalService();
+      const resProcessedStr = JSON.stringify(resProcessed);
+      // TODO: Check how to add a JSON as attribute
+      // span.setAttributes({result: resProcessed});
+      span.setAttribute('resultstr', resProcessedStr);
+      span.end();
+      return resProcessed
+    }
+  );
+
   return resProcessed
 }
 
 const callToAuthService = (userToken) => {
+  const someWork = () => {
+    const random_number = Math.floor(Math.random() * 40000000)
+    for (let i = 0; i <= random_number; i += 1) {
+      // empty
+    }
+  }
+  someWork()
   if (userToken > 3) {
     throw new Error('User does not exist');
   }
@@ -78,6 +108,41 @@ const authenticateWithToken = async (userToken) => {
   //   activeSpan.setTag('user', userDetails);
   //   return userDetails;
   // });
+
+
+  const tracer = getTracer()
+  await tracer.startActiveSpan('external_call', async span => {
+    const response = await axios.get('https://jsonplaceholder.typicode.com/todos/1')
+    span.setAttribute("title", response.data.title || 'default_value_in_case_of_error')
+    span.end()
+  })
+
+  userDetails = await tracer.startActiveSpan('user.authentication', async parentSpan => {
+    let res = {}
+    try {
+      res = await tracer.startActiveSpan(
+        'fake_auth_service.verify_id_token', 
+        { attributes: { 'service.name': 'fake_auth_service' } },
+        async span => {
+          let details = {}
+          try {
+            details = await callToAuthService(userToken);
+            span.setAttribute('user', JSON.stringify(details));
+          } catch (err) {
+            console.log(err)
+            throw new Error(err) 
+          } finally {
+            span.end()
+          }
+          return details
+        }
+      )
+    } finally {
+      parentSpan.end()
+    }
+    return res;
+  });
+  
   return userDetails
 }
 
