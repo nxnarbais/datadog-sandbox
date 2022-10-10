@@ -91,7 +91,7 @@ const callToAuthService = (userToken) => {
   }
   someWork()
   if (userToken > 3) {
-    throw new Error('User does not exist');
+    throw new Error('Invalid auth query');
   }
   return { userId: userToken + 42 }
 }
@@ -129,14 +129,19 @@ const authenticateWithToken = async (userToken) => {
             details = await callToAuthService(userToken);
             span.setAttribute('user', JSON.stringify(details));
           } catch (err) {
-            console.log(err)
-            throw new Error(err) 
+            span.recordException(err);
+            span.setStatus({ code: opentelemetry.SpanStatusCode.ERROR });
+            throw new Error('User does not exist');
           } finally {
             span.end()
           }
           return details
         }
       )
+    } catch(err) {
+      parentSpan.recordException(err);
+      parentSpan.setStatus({ code: opentelemetry.SpanStatusCode.ERROR });
+      throw new Error('Cannot authenticate');
     } finally {
       parentSpan.end()
     }
