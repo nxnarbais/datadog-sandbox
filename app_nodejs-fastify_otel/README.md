@@ -55,6 +55,12 @@ FIXME: otlphttp exporter is not working
 
 FIXME: NGINX and the nodeapp are not connected
 
+### Option 6: Traces to Datadog as OTLP Collector
+
+1. Start app: `docker compose -f ./docker-conf/docker-compose-app_and_datadog.yaml up`
+1. Curl endpoints
+1. Observe traces in Datadog `https://app.datadoghq.com/apm/traces?query=%40_top_level%3A1%20service%3Asnoopy` *(Edit extension depending on datacenter)*
+
 ## Others
 
 ### Endpoints to test

@@ -1,0 +1,61 @@
+version: '3.7'
+
+services:
+
+  node:
+    image: "node:16-slim"
+    container_name: dd-node
+    working_dir: /home/node/app
+    environment:
+      # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md
+      - OTEL_SERVICE_NAME=snoopy
+      - OTEL_LOG_LEVEL=DEBUG
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://datadog-agent:4318
+    volumes:
+      - ../:/home/node/app
+    ports:
+      - 3000:3000/tcp
+    # command: "node --require './tracing.js' server.js"
+    command: "npm run start"
+    links:
+      - datadog
+    labels:
+      # Relevant for the logs and has no impact on the traces
+      com.datadoghq.ad.logs: '[{"source":"nodejs","service":"snoopy"}]'
+  
+  datadog:
+    container_name: datadog-agent
+    image: datadog/agent:latest
+    env_file:
+      - ../.env
+    environment:
+      ## GLOBALS
+      # - DD_API_KEY
+      # - DD_SITE
+      - DD_HOSTNAME=localpro
+      - DD_TAGS=env:sandbox owner:ddog
+      ## APM https://docs.datadoghq.com/agent/docker/apm/
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      - DD_APM_IGNORE_RESOURCES=GET /static, GET /health # Exclude resources that are not necessary to track and maybe too verbose
+      - DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT=0.0.0.0:4317
+      - DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT=0.0.0.0:4318
+      ## LOGS https://docs.datadoghq.com/agent/docker/log/
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      ## LIVE PROCESSES https://docs.datadoghq.com/graphing/infrastructure/process/?tab=docker
+      - DD_PROCESS_AGENT_ENABLED=true
+      ## DOGSTATSD
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+    ports:
+      - 8126:8126/tcp # APM available from any host
+      - 8125:8125/udp # Dogstatsd
+      - 4317:4317
+      - 4318:4318
+    volumes:
+     - /var/run/docker.sock:/var/run/docker.sock:ro
+     - /proc/:/host/proc/:ro
+     - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+     - /etc/passwd:/etc/passwd:ro # LIVE PROCESSES
+
+  
