@@ -39,10 +39,21 @@ FIXME: otlphttp exporter is not working
 
 ### Option 4: Traces to OTel to then Datadog and Jaeger
 
-1. Start app: `docker compose -f ./docker-conf/docker-compose.yaml up`
+1. Start app: `docker compose -f ./docker-conf/docker-compose-app_collector_and_datadog.yaml up`
 1. Curl endpoints
 1. Observe traces in Jaeger `http://localhost:16686/` and in the logs
 1. Observe traces in Datadog `https://app.datadoghq.com/apm/traces?query=%40_top_level%3A1%20service%3Asnoopy` *(Edit extension depending on datacenter)*
+
+### Option 5: Traces (with NGINX) to OTel to then Datadog and Jaeger
+
+1. Go to docker-conf folder and build image `docker build -t nginx-otel --platform linux/amd64 .` - [doc](https://opentelemetry.io/blog/2022/instrument-nginx/)
+1. Go back to the main folder
+1. Start app: `docker compose -f ./docker-conf/docker-compose-app_collector_and_datadog_with_nginx.yaml up`
+1. Curl endpoints
+1. Observe traces in Jaeger `http://localhost:16686/` and in the logs
+1. Observe traces in Datadog `https://app.datadoghq.com/apm/traces?query=%40_top_level%3A1%20service%3Asnoopy` *(Edit extension depending on datacenter)*
+
+FIXME: NGINX and the nodeapp are not connected
 
 ## Others
 
@@ -65,3 +76,6 @@ FIXME: otlphttp exporter is not working
 
 - OpenTelemetry collector Datadog exporter - [doc](https://docs.datadoghq.com/tracing/trace_collection/open_standards/otel_collector_datadog_exporter/#configuring-the-datadog-exporter)
 
+### Going beyond
+
+- [otel-demo](https://github.com/open-telemetry/opentelemetry-demo)

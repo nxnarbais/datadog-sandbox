@@ -7,6 +7,7 @@ services:
     container_name: dd-node
     working_dir: /home/node/app
     environment:
+      # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md
       - OTEL_SERVICE_NAME=snoopy
       - OTEL_LOG_LEVEL=DEBUG
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger_app:4318

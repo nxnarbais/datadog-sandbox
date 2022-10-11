@@ -25,7 +25,7 @@ receivers:
   # Data sources: traces, metrics, logs
   otlp:
     protocols:
-      # grpc:
+      grpc:
       http:
   # The prometheus receiver scrapes metrics needed for the OpenTelemetry Collector Dashboard.
   prometheus:

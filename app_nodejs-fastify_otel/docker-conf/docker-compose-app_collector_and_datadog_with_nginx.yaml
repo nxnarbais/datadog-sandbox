@@ -7,11 +7,11 @@ services:
     container_name: dd-node
     working_dir: /home/node/app
     environment:
+      # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md
       - OTEL_SERVICE_NAME=snoopy
       - OTEL_LOG_LEVEL=DEBUG
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4318
-      - OTEL_RESOURCE_ATTRIBUTES=env=demo,service.namespace=sandbox,service.version=0.1.2,owner=ddog,deployment=blue
-      # - OTEL_EXPORTER_OTLP_HEADERS="made=with_love_from_tps”
+      - OTEL_RESOURCE_ATTRIBUTES=env=sandbox,service.namespace=sandbox,service.version=0.1.2,owner=ddog,deployment=blue
     volumes:
       - ../:/home/node/app
     ports:
@@ -67,3 +67,18 @@ services:
       - 14269:14269
       - 14250:14250
       - 9411:9411
+
+  # https://opentelemetry.io/blog/2022/instrument-nginx/
+  nginx:
+    # build: .
+    image: nginx-otel
+    container_name: otel_nginx
+    ports:
+      - "5050:80"
+    volumes:
+      - ../nginx-conf:/etc/nginx/conf.d
+    depends_on:
+      - node
+    links:
+      - otel-collector
+      - jaeger
