@@ -61,6 +61,12 @@ FIXME: NGINX and the nodeapp are not connected
 1. Curl endpoints
 1. Observe traces in Datadog `https://app.datadoghq.com/apm/traces?query=%40_top_level%3A1%20service%3Asnoopy` *(Edit extension depending on datacenter)*
 
+### Option 7: Traces to two OTel Collectors then Datadog
+
+1. Start app: `docker compose -f ./docker-conf/docker-compose-app_2_collectors_and_datadog.yaml up`
+1. Curl endpoints
+1. Observe traces in Datadog `https://app.datadoghq.com/apm/traces?query=%40_top_level%3A1%20service%3Asnoopy` *(Edit extension depending on datacenter)*
+
 ## Others
 
 ### Endpoints to test

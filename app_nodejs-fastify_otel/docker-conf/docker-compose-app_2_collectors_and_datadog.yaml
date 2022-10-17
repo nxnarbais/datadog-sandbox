@@ -1,0 +1,57 @@
+version: '3.7'
+
+services:
+
+  node:
+    image: "node:16-slim"
+    container_name: dd-node
+    working_dir: /home/node/app
+    environment:
+      # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md
+      - OTEL_SERVICE_NAME=snoopy
+      - OTEL_LOG_LEVEL=DEBUG
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol_middleware:4318
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4318
+      - OTEL_RESOURCE_ATTRIBUTES=env=sandbox,service.namespace=sandbox,service.version=0.1.2,owner=ddog,deployment=blue
+    volumes:
+      - ../:/home/node/app
+    ports:
+      - 3000:3000/tcp
+    # command: "node --require './tracing.js' server.js"
+    command: "npm run start"
+    links:
+      - otel-collector-middleware
+      # - otel-collector
+  
+  # Collector
+  otel-collector-middleware:
+    container_name: otelcol_middleware
+    image: otel/opentelemetry-collector:0.61.0
+    # image: otel/opentelemetry-collector-contrib:0.61.0 # with the datadog exporter
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ../otel-conf/otel-collector-config_middleware.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "1888:1888"   # pprof extension
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP http receiver
+      - "55679:55679" # zpages extension
+    links:
+      - otel-collector
+  
+  # Collector
+  otel-collector:
+    container_name: otelcol
+    # image: otel/opentelemetry-collector:0.61.0
+    image: otel/opentelemetry-collector-contrib:0.61.0 # with the datadog exporter
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ../otel-conf/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    expose:
+      - "4318"
+    env_file:
+      - ../.env
+    
