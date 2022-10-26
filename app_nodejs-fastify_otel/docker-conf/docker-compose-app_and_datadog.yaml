@@ -11,6 +11,7 @@ services:
       - OTEL_SERVICE_NAME=snoopy
       - OTEL_LOG_LEVEL=DEBUG
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://datadog-agent:4318
+      - OTEL_RESOURCE_ATTRIBUTES=env=sandbox,service.namespace=sandbox,service.version=0.1.2,owner=ddog,deployment=blue,git.commit.sha=${DD_COMMIT_SHA},git.repository_url=https://github.com/nxnarbais/datadog-sandbox/blob/main/app_nodejs-fastify_otel/server.js
     volumes:
       - ../:/home/node/app
     ports:

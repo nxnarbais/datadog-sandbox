@@ -67,3 +67,8 @@ service:
       processors: [batch]
       exporters: [otlphttp]
       # exporters: [logging, otlphttp]
+    metrics:
+      receivers: [hostmetrics, otlp]
+      processors: [batch]
+      # exporters: [logging, datadog]
+      exporters: [otlphttp]
