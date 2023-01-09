@@ -4,9 +4,9 @@ metadata:
   name: bitsapp-deployment
   labels:
     app: bitsapp
-  #   tags.datadoghq.com/env: "dev"
-  #   tags.datadoghq.com/service: "bitsapp"
-  #   tags.datadoghq.com/version: "1.0.0"
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "bitsapp"
+    tags.datadoghq.com/version: "1.0.0"
 spec:
   replicas: 1
   selector:
@@ -16,11 +16,11 @@ spec:
     metadata:
       labels:
         app: bitsapp
-      #   tags.datadoghq.com/env: "dev"
-      #   tags.datadoghq.com/service: "bitsapp"
-      #   tags.datadoghq.com/version: "1.0.0"
-      # annotations:
-      #   ad.datadoghq.com/mongo.logs: '[{"source":"fastify","service":"bitsapp"}]'
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "bitsapp"
+        tags.datadoghq.com/version: "1.0.0"
+      annotations:
+        ad.datadoghq.com/mongo.logs: '[{"source":"fastify","service":"bitsapp"}]'
     spec:
       containers:
       - name: bitsapp
@@ -87,8 +87,42 @@ data:
         protocols:
           grpc:
           http:
+      # The hostmetrics receiver is required to get correct infrastructure metrics in Datadog.
+      hostmetrics:
+        collection_interval: 10s
+        scrapers:
+          paging:
+            metrics:
+              system.paging.utilization:
+                enabled: true
+          cpu:
+            metrics:
+              system.cpu.utilization:
+                enabled: true
+          disk:
+          filesystem:
+            metrics:
+              system.filesystem.utilization:
+                enabled: true
+          load:
+          memory:
+          network:
+          processes:
+      # The prometheus receiver scrapes metrics needed for the OpenTelemetry Collector Dashboard.
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: 'otelcol'
+            scrape_interval: 10s
+            static_configs:
+            - targets: ['0.0.0.0:8888']
     processors:
       batch:
+        # Datadog APM Intake limit is 3.2MB. Let's make sure the batches do not
+        # go over that.
+        send_batch_max_size: 1000
+        send_batch_size: 100
+        timeout: 10s
       memory_limiter:
         # 80% of maximum memory up to 2G
         limit_mib: 1500
@@ -111,18 +145,26 @@ data:
         tls:
           insecure: true
       otlp:
-        endpoint: "http://jaeger-collector:4318"
+        endpoint: "http://jaeger-collector:4317"
         # endpoint: "http://someotlp.target.com:4317" # Replace with a real endpoint.
         # tls:
         #   insecure: true
+      datadog:
+        api:
+          site: ${env:DD_SITE}
+          key: ${env:DD_API_KEY}
     service:
       extensions: [zpages, memory_ballast]
       pipelines:
         traces/1:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [otlphttp, logging]
+          exporters: [datadog, logging]
           # exporters: [jaeger, logging]
+        metrics:
+          receivers: [hostmetrics, otlp]
+          processors: [batch]
+          exporters: [datadog]
 ---
 apiVersion: v1
 kind: Service
@@ -169,9 +211,11 @@ spec:
     spec:
       containers:
       - command:
-          - "/otelcol"
+          # - "/otelcol"
+          - "/otelcol-contrib"
           - "--config=/conf/otel-collector-config.yaml"
-        image: otel/opentelemetry-collector:0.68.0
+        # image: otel/opentelemetry-collector:0.68.0
+        image: otel/opentelemetry-collector-contrib:0.68.0
         name: otel-collector
         resources:
           limits:
@@ -180,6 +224,17 @@ spec:
           requests:
             cpu: 200m
             memory: 400Mi
+        env:
+        - name: DD_SITE
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secrets
+              key: DD_SITE
+        - name: DD_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secrets
+              key: DD_API_KEY
         ports:
         - containerPort: 55679 # Default endpoint for ZPages.
         - containerPort: 4317 # Default endpoint for OpenTelemetry receiver.

@@ -55,3 +55,54 @@ To delete: `kubectl delete -f app_with_otel_agent_and_jaeger.yaml`
 
 To see the OTel collector logs: `kubectl logs -f pod/<otel_pod_id>`
 
+Note: The structure for the deployment of OTel has been taken from the [OTel doc](https://opentelemetry.io/docs/collector/getting-started/#kubernetes).
+
+## OpenTelemetry Collector Datadog Exporter
+
+[Datadog doc](https://docs.datadoghq.com/opentelemetry/otel_collector_datadog_exporter/?tab=onahost)
+
+1. Copy and edit the `datadog_secret.yaml.example`: `cp datadog_secret.yaml.example datadog_secret.yaml`
+    1. Add the encoded secrets
+1. Deploy the secrets: `kubectl -f datadog_secret.yaml`
+1. Start app: `kubectl -f app_with_otel_gateway_and_datadog.yaml`
+1. Curl endpoints: `curl localhost:3000/route1`
+1. Observe traces in Jaeger `http://localhost:3030/`
+
+To delete: `kubectl delete -f app_with_otel_gateway_and_datadog.yaml`
+
+To see the traces in Datadog, go to the [Trace live search](https://app.datadoghq.com/apm/traces?query=%40_top_level%3A1%20-env%3Aprod)
+
+Go further and connect logs, rum and synthetics with APM ([doc](https://docs.datadoghq.com/tracing/other_telemetry/)).
+
+## OTel with the Datadog Agent
+
+### Install the Datadog Agent on the cluster
+
+[Datadog doc](https://docs.datadoghq.com/containers/kubernetes/installation/)
+
+```
+helm install <RELEASE_NAME> -f values.yaml  --set datadog.apiKey=<DATADOG_API_KEY> datadog/datadog --set targetSystem=<TARGET_SYSTEM>
+```
+
+Iterate on your `values.yaml` with
+```
+helm upgrade <RELEASE_NAME> -f values.yaml --set datadog.apiKey=<DATADOG_API_KEY> datadog/datadog
+```
+
+Uninstall release
+```
+helm uninstall <RELEASE_NAME>
+```
+
+### OTLP ingestion by the Datadog Agent
+
+[Datadog doc](https://docs.datadoghq.com/opentelemetry/otlp_ingest_in_the_agent/?tab=host).
+
+1. Start the Datadog agent with otlp receiver enabled
+1. Start app: `kubectl -f app_with_jaeger.yaml`
+1. Curl endpoints: `curl localhost:3000/route1`
+1. Observe traces in Jaeger `http://localhost:3030/`
+
+To delete: `kubectl delete -f app_with_jaeger.yaml`
+
+Go further and connect logs, rum and synthetics with APM ([doc](https://docs.datadoghq.com/tracing/other_telemetry/)).

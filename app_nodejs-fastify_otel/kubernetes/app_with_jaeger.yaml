@@ -34,12 +34,15 @@ spec:
             cpu: 200m
             memory: 200Mi
         env:
+        # https://opentelemetry.io/docs/concepts/sdk-configuration/otlp-exporter-configuration/
         - name: OTEL_SERVICE_NAME
           value: bitsapp
         - name: OTEL_LOG_LEVEL
           value: DEBUG
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: http://jaeger-collector:4318
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: env=sandbox,service.namespace=sandbox,service.version=0.1.2,owner=ddog,deployment=green
         ports:
         - containerPort: 3000
         workingDir: /home/node/app
