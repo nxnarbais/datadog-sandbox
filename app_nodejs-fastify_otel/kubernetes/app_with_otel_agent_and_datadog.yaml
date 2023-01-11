@@ -235,6 +235,14 @@ data:
         protocols:
           grpc:
           http:
+      # The prometheus receiver scrapes metrics needed for the OpenTelemetry Collector Dashboard.
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: 'otelcol'
+            scrape_interval: 10s
+            static_configs:
+            - targets: ['0.0.0.0:8888']
     processors:
       batch:
         # Datadog APM Intake limit is 3.2MB. Let's make sure the batches do not
