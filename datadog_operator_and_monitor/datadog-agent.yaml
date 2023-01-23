@@ -1,0 +1,43 @@
+# config options https://github.com/DataDog/datadog-operator/blob/main/docs/configuration.v1alpha1.md
+# templates: https://docs.datadoghq.com/agent/guide/operator-advanced/#deploy-the-datadog-agents-with-the-operator
+apiVersion: datadoghq.com/v1alpha1
+kind: DatadogAgent
+metadata:
+  name: datadog
+spec:
+  site: datadoghq.com
+  clusterName: snowpower
+  credentials:
+    apiSecret:
+      # secretName: datadog-secret
+      # keyName: api-key
+      secretName: datadog-secrets
+      keyName: DD_API_KEY
+    appSecret:
+      # secretName: datadog-secret
+      # keyName: app-key
+      secretName: datadog-secrets
+      keyName: DD_APP_KEY
+  agent:
+    config:
+      tags: ["env:sandbox","owner:nxnarbais","version:20230123"]
+    apm:
+      enabled: true
+    log:
+      enabled: true
+    process:
+      enabled: true
+      processCollectionEnabled: true
+    systemProbe:
+      bpfDebugEnabled: true
+    security:
+      compliance:
+        enabled: true
+      runtime:
+        enabled: false
+  clusterAgent:
+    config:
+      externalMetrics:
+        enabled: true
+      admissionController:
+        enabled: true
