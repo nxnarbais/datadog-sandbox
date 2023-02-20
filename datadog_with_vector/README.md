@@ -34,7 +34,7 @@ For those examples, we will deploy everything within the default namespace.
 ### Deploy the Datadog Agent
 
 ```
-helm install datadog -f values-datadog.yaml  --set datadog.apiKey=YOUR_API_KEY datadog/datadog
+helm install datadog -f values-datadog.yaml datadog/datadog
 ```
 
 [Datadog doc: Helm installation](https://docs.datadoghq.com/containers/kubernetes/installation/?tab=helm)
