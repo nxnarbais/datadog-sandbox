@@ -74,7 +74,7 @@ customConfig:
         - logs_syslog_parsed
         - logs_source_added
         - dummy_logs_apache
-      threshold: 300
+      threshold: 30
       window_secs: 60
     metrics_from_dummy_logs_json:
       type: log_to_metric

@@ -92,3 +92,6 @@ Get all logs and metrics from the agent into Datadog
 1. Observe more hosts reporting in the metric explorer with `sum:system.cpu.idle{*} by {host}`
 1. Check the OOTB dashboard to monitor Vector https://app.datadoghq.com/dash/integration/30572 
 
+# Resources
+
+- [More examples](https://github.com/vectordotdev/vector-demos)

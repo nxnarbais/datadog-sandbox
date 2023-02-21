@@ -121,7 +121,7 @@ customConfig:
     print:
       type: console
       inputs:
-        - dummy_logs
+        # - dummy_logs
         # - dummy_logs_json
         # - dummy_logs_apache
         # - dummy_logs_syslog
