@@ -162,6 +162,22 @@ customConfig:
       default_api_key: "${DD_API_KEY}"
       site: datadoghq.com
       compression: gzip
+    datadog_log_sink_2:
+      type: datadog_logs
+      inputs:
+        # - agent
+        # - dummy_logs*
+        # - logs_throttled
+        # - logs_syslog_parsed
+        # - logs_source_added
+        # - vector_logs
+        - logs_karimmove_team
+        - logs_jessedy_team
+        # - logs_routing_syslog.karimmove
+        # - logs_routing_syslog.jesseddy
+      default_api_key: "some_api_key"
+      site: datadoghq.com
+      compression: gzip
     datadog_metric_sink:
       type: datadog_metrics
       inputs:

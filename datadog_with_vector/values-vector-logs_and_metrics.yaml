@@ -83,7 +83,7 @@ customConfig:
         field: hostname
         tags:
           team: tps
-          host: '{{ "{{" }}hostname{{ "}}" }}'
+          host: '{{ "{{" }}hostname{{ "}}" }}' # equivalent to: `host: {{ hostname }}` the curly brackets need to be escaped because of kubernetes
       - type: counter
         name: sum_procid
         namespace: vectr_metric
