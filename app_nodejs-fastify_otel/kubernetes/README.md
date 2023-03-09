@@ -6,6 +6,10 @@ Kubernetes Architecture
 Start cluster
 ```
 minikube start --nodes=3 --mount --mount-string="<your_local_folder>:/app/datadog-sandbox"
+```
+
+For instance:
+```
 minikube start --nodes=3 --mount --mount-string="/Users/nicolas.narbais/ddproject/datadog-sandbox:/app/datadog-sandbox"
 ```
 
@@ -16,7 +20,7 @@ minikube dashboard
 
 To redirect traffic to localhost
 ```
-minikube tunnel
+minikube tunnel --clean
 ```
 
 # Deploy
@@ -25,7 +29,7 @@ minikube tunnel
 
 This example shows the raw traces going directly from the application OTel SDK to Jaeger.
 
-1. Start app: `kubectl -f app_with_jaeger.yaml`
+1. Start app: `kubectl apply -f app_with_jaeger.yaml`
 1. Curl endpoints: `curl localhost:3000/route1`
 1. Observe traces in Jaeger `http://localhost:3030/`
 
@@ -35,7 +39,7 @@ To delete `kubectl delete -f app_with_jaeger.yaml`
 
 This example presents the common OTel architecture with one OTel Gateway collecting all traces from a cluster and forwarding that to an external solution (here Jaeger).
 
-1. Start app: `kubectl -f app_with_otel_gateway_and_jaeger.yaml`
+1. Start app: `kubectl apply -f app_with_otel_gateway_and_jaeger.yaml`
 1. Curl endpoints: `curl localhost:3000/route1`
 1. Observe traces in Jaeger `http://localhost:3030/`
 
@@ -47,7 +51,7 @@ To see the OTel collector logs: `kubectl logs -f pod/<otel_pod_id>`
 
 This example presents the common OTel architecture with an OTel agent deployed as a daemonset and one OTel Gateway collecting. All traces are sent to the OTel agent on the same host which then forward the traces to the OTel Gateway. The OTel Gateway then forward everything to an external solution (here Jaeger).
 
-1. Start app: `kubectl -f app_with_otel_agent_and_jaeger.yaml`
+1. Start app: `kubectl apply -f app_with_otel_agent_and_jaeger.yaml`
 1. Curl endpoints: `curl localhost:3000/route1`
 1. Observe traces in Jaeger `http://localhost:3030/`
 
@@ -64,7 +68,7 @@ Note: The structure for the deployment of OTel has been taken from the [OTel doc
 1. Copy and edit the `datadog_secret.yaml.example`: `cp datadog_secret.yaml.example datadog_secret.yaml`
     1. Add the encoded secrets
 1. Deploy the secrets: `kubectl -f datadog_secret.yaml`
-1. Start app: `kubectl -f app_with_otel_gateway_and_datadog.yaml`
+1. Start app: `kubectl apply -f app_with_otel_gateway_and_datadog.yaml`
 1. Curl endpoints: `curl localhost:3000/route1`
 1. Observe traces in Jaeger `http://localhost:3030/`
 
@@ -80,7 +84,7 @@ Go further and connect logs, rum and synthetics with APM ([doc](https://docs.dat
 
 1. Copy and edit the `datadog_secret.yaml.example`: `cp datadog_secret.yaml.example datadog_secret.yaml`
     1. Add the encoded secrets
-1. Deploy the secrets: `kubectl -f datadog_secret.yaml`
+1. Deploy the secrets: `kubectl apply -f datadog_secret.yaml`
 1. Start app: `kubectl -f app_with_otel_agent_and_datadog.yaml`
 1. Curl endpoints: `curl localhost:3000/route1`
 1. Observe traces in Jaeger `http://localhost:3030/`
@@ -118,7 +122,7 @@ helm uninstall <RELEASE_NAME>
 [Datadog doc](https://docs.datadoghq.com/opentelemetry/otlp_ingest_in_the_agent/?tab=host).
 
 1. Start the Datadog agent with otlp receiver enabled
-1. Start app: `kubectl -f app_with_datadog.yaml`
+1. Start app: `kubectl apply -f app_with_datadog.yaml`
 1. Curl endpoints: `curl localhost:3000/route1`
 1. Observe traces in Jaeger `http://localhost:3030/`
 
