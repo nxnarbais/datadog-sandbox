@@ -44,66 +44,119 @@ jobs:
   service_catalog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      # This uses the custom action to push the service definition to Datadog.
-      # https://github.com/marketplace/actions/datadog-service-catalog-metadata-provider
-      - uses: arcxp/datadog-service-catalog-metadata-provider@v1
-        with:
-          # You should use GitHub's encrypted secrets feature to manage secrets for Datadog.
-          # Don't store your secrets in your workflow files, and don't do anything fancy to get them.
-          # GitHub already gave us a great tool for managing secrets, and it's super easy to use.
-          datadog-hostname: api.datadoghq.com
-          datadog-key: ${{ secrets.DD_API_KEY }}
-          datadog-app-key: ${{ secrets.DD_APP_KEY }}
-
-          # This maps to the `dd-service` field in Datadog, it's just the name of your service.
-          service-name: bitsapp
-          
-          # The name of the team which owns and/or supports the service.
-          team: technical_post_sales
-
-          # The email address of the team which owns and/or supports the service.
-          email: tps@fake-email-host.com
-          
-          # The URL of the Slack channel where support for the service is handled.
-          # Keep in mind, this _must_ be a URL. To get the URL, right-click on the channel
-          # in the Slack app, and select "Copy link" in the "Copy" submenu.
-          slack-support-channel: 'https://team-name-here.slack.com/archives/ABC123'
-          
-          tags: |
-            - lang:nodejs
-            - framework:fastify
-          
-          # For repos, you'll obviously want to have the repository for your service. If your service
-          # is made up of multiple repositories, you can add them here as well. Note that we're using a multi-line string here. That multi-line string will be parsed as YAML, I didn't typo.
-          repos: |
-            - name: hello-world (primary service repo)
-              url: https://github.com/fake-org/hello-world
-              provider: github
-            - name: dd-sandbox
-              url: https://github.com/nxnarbais/datadog-sandbox
-              provider: github
-          
-          # Docs contain anything that you might need when supporting the service.
-          docs: |
-            - name: API Docs
-              url: https://fake-org.github.io/hello-world-api-docs
-              provider: github
-          
-          # Links are great for runbooks, other documentation, other services which
-          # could be helpful, as well as dashboards.
-          links: |
-            - name: outage-runbook
-              url: https://fake-org.github.io/hello-world-outage-runbook
-              type: runbook
-            - name: hello-world dashboard
-              url: https://app.datadoghq.com/dashboard/1234567890
-              type: dashboard
-          
-          # These integrations allow folks to be able to see who's on-call for the
-          # service right from the Datadog Service Catalog.
-          integrations: |
-            opsgenie:
-              service_url: https://fake-org.hello-world.opsgenie.com
-              region: US
-            pagerduty: https://fake-org.hello-world.pagerduty.com
+      - name: Setup service catalog for service-example
+        run: |
+          # Curl command
+          curl -X POST "https://api.datadoghq.com/api/v2/services/definitions" \
+          -H "Accept: application/json" \
+          -H "Content-Type: application/json" \
+          -H "DD-API-KEY: ${DD_API_KEY}" \
+          -H "DD-APPLICATION-KEY: ${DD_APP_KEY}" \
+          -d @- << EOF
+          {
+            "contacts": [
+              {
+                "contact": "contact@datadoghq.com",
+                "name": "Team Email",
+                "type": "email"
+              }
+            ],
+            "dd-service": "service-example",
+            "dd-team": "my-team",
+            "docs": [
+              {
+                "name": "Architecture",
+                "provider": "google drive",
+                "url": "https://gdrive/mydoc"
+              }
+            ],
+            "extensions": {
+              "myorgextension": "extensionvalue"
+            },
+            "integrations": {
+              "opsgenie": {
+                "region": "US",
+                "service-url": "https://my-org.opsgenie.com/service/123e4567-e89b-12d3-a456-426614174000"
+              },
+              "pagerduty": "https://my-org.pagerduty.com/service-directory/PMyService"
+            },
+            "links": [
+              {
+                "name": "Runbook",
+                "type": "runbook",
+                "url": "https://my-runbook"
+              }
+            ],
+            "repos": [
+              {
+                "name": "Source Code",
+                "provider": "GitHub",
+                "url": "https://github.com/DataDog/schema"
+              }
+            ],
+            "schema-version": "v2",
+            "tags": [
+              "my:tag",
+              "service:tag"
+            ],
+            "team": "my-team"
+          }
+          EOF
+      - name: Setup service catalog for bitsapp
+        run: |
+          # Curl command
+          curl -X POST "https://api.datadoghq.com/api/v2/services/definitions" \
+          -H "Accept: application/json" \
+          -H "Content-Type: application/json" \
+          -H "DD-API-KEY: ${DD_API_KEY}" \
+          -H "DD-APPLICATION-KEY: ${DD_APP_KEY}" \
+          -d @- << EOF
+          {
+              "service-name": "bitsapp",
+              "team": "technical_post_sales",
+              "email": "tps@fake-email-host.com",
+              "slack-support-channel": "https://team-name-here.slack.com/archives/ABC123",
+              "tags": [
+                  "lang:nodejs",
+                  "framework:fastify"
+              ],
+              "repos": [
+                  {
+                      "name": "hello-world (primary service repo)",
+                      "url": "https://github.com/fake-org/hello-world",
+                      "provider": "github"
+                  },
+                  {
+                      "name": "dd-sandbox",
+                      "url": "https://github.com/nxnarbais/datadog-sandbox",
+                      "provider": "github"
+                  }
+              ],
+              "docs": [
+                  {
+                      "name": "API Docs",
+                      "url": "https://fake-org.github.io/hello-world-api-docs",
+                      "provider": "github"
+                  }
+              ],
+              "links": [
+                  {
+                      "name": "outage-runbook",
+                      "url": "https://fake-org.github.io/hello-world-outage-runbook",
+                      "type": "runbook"
+                  },
+                  {
+                      "name": "hello-world dashboard",
+                      "url": "https://app.datadoghq.com/dashboard/1234567890",
+                      "type": "dashboard"
+                  }
+              ],
+              "integrations": {
+                  "opsgenie": {
+                      "service_url": "https://fake-org.hello-world.opsgenie.com",
+                      "region": "US"
+                  },
+                  "pagerduty": "https://fake-org.hello-world.pagerduty.com"
+              }
+          }
+          EOF
