@@ -112,51 +112,63 @@ jobs:
           -H "DD-APPLICATION-KEY: ${{secrets.DD_APP_KEY}}" \
           -d @- << EOF
           {
-              "service-name": "bitsapp",
-              "team": "technical_post_sales",
-              "email": "tps@fake-email-host.com",
-              "slack-support-channel": "https://team-name-here.slack.com/archives/ABC123",
-              "tags": [
-                  "lang:nodejs",
-                  "framework:fastify"
-              ],
-              "repos": [
-                  {
-                      "name": "hello-world (primary service repo)",
-                      "url": "https://github.com/fake-org/hello-world",
-                      "provider": "github"
-                  },
-                  {
-                      "name": "dd-sandbox",
-                      "url": "https://github.com/nxnarbais/datadog-sandbox",
-                      "provider": "github"
-                  }
-              ],
-              "docs": [
-                  {
-                      "name": "API Docs",
-                      "url": "https://fake-org.github.io/hello-world-api-docs",
-                      "provider": "github"
-                  }
-              ],
-              "links": [
-                  {
-                      "name": "outage-runbook",
-                      "url": "https://fake-org.github.io/hello-world-outage-runbook",
-                      "type": "runbook"
-                  },
-                  {
-                      "name": "hello-world dashboard",
-                      "url": "https://app.datadoghq.com/dashboard/1234567890",
-                      "type": "dashboard"
-                  }
-              ],
-              "integrations": {
-                  "opsgenie": {
-                      "service_url": "https://fake-org.hello-world.opsgenie.com",
-                      "region": "US"
-                  },
-                  "pagerduty": "https://fake-org.hello-world.pagerduty.com"
+            "contacts": [
+              {
+                "contact": "technical_post_sales@dd.com",
+                "name": "TPS Email",
+                "type": "email"
               }
+            ],
+            "dd-service": "bitsapp",
+            "dd-team": "technical_post_sales",
+            "docs": [
+              {
+                "name": "Datadog doc on Service Catalog",
+                "provider": "datadog doc",
+                "url": "https://docs.datadoghq.com/tracing/service_catalog/setup/"
+              },
+              {
+                "name": "API Docs",
+                "url": "https://fake-org.github.io/hello-world-api-docs",
+                "provider": "github"
+              }
+            ],
+            "integrations": {
+              "opsgenie": {
+                "region": "US",
+                "service-url": "https://my-org.opsgenie.com/service/123e4567-e89b-12d3-a456-426614174000"
+              },
+              "pagerduty": "https://my-org.pagerduty.com/service-directory/PMyService"
+            },
+            "links": [
+              {
+                "name": "Runbook",
+                "type": "runbook",
+                "url": "https://my-runbook"
+              },
+              {
+                "name": "outage-runbook",
+                "url": "https://fake-org.github.io/hello-world-outage-runbook",
+                "type": "runbook"
+              },
+              {
+                "name": "hello-world dashboard",
+                "url": "https://app.datadoghq.com/dashboard/1234567890",
+                "type": "dashboard"
+              }
+            ],
+            "repos": [
+              {
+                "name": "Source Code",
+                "provider": "GitHub",
+                "url": "https://github.com/nxnarbais/datadog-sandbox"
+              }
+            ],
+            "schema-version": "v2",
+            "tags": [
+              "lang:nodejs",
+              "framework:fastify"
+            ],
+            "team": "technical_post_sales"
           }
           EOF
