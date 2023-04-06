@@ -25,6 +25,14 @@ minikube tunnel --clean
 
 # Deploy
 
+### Prep: App
+
+1. Make sure you have NodeJS installed
+1. Run `npm i` to install dependencies on the folder `app_nodejs-fastify_otel`
+1. Run `npm run start` to start the app
+  1. Run `curl localhost:3000` to check that everything is working
+  1. Stop the app with `CTRL-C`
+
 ## Traces to Jaegger
 
 This example shows the raw traces going directly from the application OTel SDK to Jaeger.
@@ -85,7 +93,7 @@ Go further and connect logs, rum and synthetics with APM ([doc](https://docs.dat
 1. Copy and edit the `datadog_secret.yaml.example`: `cp datadog_secret.yaml.example datadog_secret.yaml`
     1. Add the encoded secrets
 1. Deploy the secrets: `kubectl apply -f datadog_secret.yaml`
-1. Start app: `kubectl -f app_with_otel_agent_and_datadog.yaml`
+1. Start app: `kubectl apply -f app_with_otel_agent_and_datadog.yaml`
 1. Curl endpoints: `curl localhost:3000/route1`
 1. Observe traces in Jaeger `http://localhost:3030/`
 
