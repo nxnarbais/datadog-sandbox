@@ -25,11 +25,19 @@ For those examples, we will deploy everything within the default namespace.
 
 ## Preparation
 
+### Add the Vector Helm Repo
+
+[doc](https://vector.dev/docs/setup/installation/package-managers/helm/#adding-the-helm-repo)
+```
+helm repo add vector https://helm.vector.dev
+helm repo update
+```
+
 ### Set the secrets
 
 1. Copy and edit the `datadog_secret.yaml.example`: `cp datadog_secret.yaml.example datadog_secret.yaml`
     1. Add the encoded secrets
-1. Deploy the secrets: `kubectl -f datadog_secret.yaml`
+1. Deploy the secrets: `kubectl apply -f datadog_secret.yaml`
 
 ### Deploy the Datadog Agent
 

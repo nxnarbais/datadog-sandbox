@@ -10,16 +10,22 @@ env:
         name: datadog-secrets
         key: DD_API_KEY
 
-secrets:
-  # secrets.generic -- Each Key/Value will be added to the Secret's data key, each value should be raw and NOT base64
-  # encoded. Any secrets can be provided here. It's commonly used for credentials and other access related values.
-  # **NOTE: Don't commit unencrypted secrets to git!**
-  # generic: {}
-  generic:
-    # my_variable: "my-secret-value"
-    datadog_api_key: "${DD_API_KEY}"
-    # awsAccessKeyId: "access-key"
-    # awsSecretAccessKey: "secret-access-key"
+# secrets:
+#   # secrets.generic -- Each Key/Value will be added to the Secret's data key, each value should be raw and NOT base64
+#   # encoded. Any secrets can be provided here. It's commonly used for credentials and other access related values.
+#   # **NOTE: Don't commit unencrypted secrets to git!**
+#   # generic: {}
+#   generic:
+#     # my_variable: "my-secret-value"
+#     datadog_api_key: "${DD_API_KEY}"
+#     # awsAccessKeyId: "access-key"
+#     # awsSecretAccessKey: "secret-access-key"
+
+service:
+  ports: 
+    - name: not-sure-why-i-need-that
+      port: 8080
+      protocol: TCP
 
 customConfig:
   sources:
@@ -48,7 +54,7 @@ customConfig:
         - dummy_logs_json
         - dummy_logs_apache
         - dummy_logs_syslog
-      default_api_key: "${DD_API_KEY}"
+      default_api_key: ${DD_API_KEY}
       region: us
       site: datadoghq.com
       compression: gzip
