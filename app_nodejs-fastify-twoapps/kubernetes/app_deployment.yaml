@@ -47,8 +47,18 @@ spec:
                 fieldPath: metadata.labels['tags.datadoghq.com/version']
           - name: DD_TRACE_DEBUG
             value: 'true'
-          - name: DD_TRACE_AGENT_URL
-            value: 'http://ddrelease-datadog.default.svc:8126'
+          # - name: DD_TRACE_AGENT_URL
+          #   value: 'http://ddrelease-datadog.default.svc:8126'
+          - name: DD_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_PROFILING_ENABLED
+            value: "true"
+          - name: DD_LOGS_INJECTION
+            value: "true"
+          - name: DD_TRACE_SAMPLE_RATE
+            value: "1"
         ports:
         - containerPort: 3000
         workingDir: /home/node/app
@@ -127,8 +137,18 @@ spec:
                 fieldPath: metadata.labels['tags.datadoghq.com/version']
           - name: DD_TRACE_DEBUG
             value: 'true'
-          - name: DD_TRACE_AGENT_URL
-            value: 'http://ddrelease-datadog.default.svc:8126'
+          # - name: DD_TRACE_AGENT_URL
+          #   value: 'http://ddrelease-datadog.default.svc:8126'
+          - name: DD_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_PROFILING_ENABLED
+            value: "true"
+          - name: DD_LOGS_INJECTION
+            value: "true"
+          - name: DD_TRACE_SAMPLE_RATE
+            value: "1"
         ports:
         - containerPort: 3000
         workingDir: /home/node/app
