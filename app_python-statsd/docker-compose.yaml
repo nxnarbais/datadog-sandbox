@@ -14,8 +14,8 @@ services:
     volumes:
       - ./:/home/app
     command: "python app.py"
-    networks:
-      - my-net
+    # networks:
+    #   - my-net
     labels:
         com.datadoghq.ad.logs: '[{"source":"python","service":"python-demoapp"}]'
 
@@ -50,9 +50,9 @@ services:
      - /proc/:/host/proc/:ro
      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
      - /etc/passwd:/etc/passwd:ro # LIVE PROCESSES
-    networks:
-       - my-net # Created with docker network create my-net and deleted with docker network rm my-net
+    # networks:
+    #    - my-net # Created with docker network create my-net and deleted with docker network rm my-net
 
-networks:
-  my-net:
-    external: true
+# networks:
+#   my-net:
+#     external: true
