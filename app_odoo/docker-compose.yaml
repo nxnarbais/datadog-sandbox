@@ -1,0 +1,66 @@
+version: '3.1'
+services:
+  web:
+    image: odoo:16.0
+    platform: linux/amd64
+    depends_on:
+      - mydb
+    ports:
+      - "8069:8069"
+      - "5432:5432"
+    environment:
+      - HOST=mydb
+      - USER=odoo
+      - PASSWORD=myodoo
+    volumes:
+      - ./web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./addons:/mnt/extra-addons
+    labels:
+      com.datadoghq.ad.check_names: '["postgres"]'
+      com.datadoghq.ad.init_configs: '[{}]'
+      com.datadoghq.ad.instances: '[{"host":"%%host%%", "port":5432,"username":"odoo","password":"odoo"}]'
+      com.datadoghq.ad.logs: '[{"source":"odoo","service":"odoo"}]'
+  mydb:
+    image: postgres:15
+    platform: linux/amd64
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=myodoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./db-data:/var/lib/postgresql/data/pgdata
+    labels:
+      com.datadoghq.ad.logs: '[{"source":"postgres","service":"odoo-postgres"}]'
+  datadog:
+    container_name: datadog-agent
+    image: datadog/agent:latest
+    environment:
+      ## GLOBALS
+      - DD_API_KEY # The value will be taken from the .env file
+      - DD_SITE # The value will be taken from the .env file
+      - DD_HOSTNAME=localpro
+      - DD_TAGS=env:demo owner:narbais
+      - DD_AC_EXCLUDE=name:datadog-agent # exclude this container from data collection
+      ## APM https://docs.datadoghq.com/agent/docker/apm/
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      ## LOGS https://docs.datadoghq.com/agent/docker/log/
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_LOGS_CONFIG_DOCKER_CONTAINER_USE_FILE=true
+      ## LIVE PROCESSES https://docs.datadoghq.com/graphing/infrastructure/process/?tab=docker
+      - DD_PROCESS_AGENT_ENABLED=true
+      ## DOGSTATSD
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+    ports:
+      - 8126:8126/tcp # APM available from any host
+      - 8125:8125/udp # Dogstatsd
+    volumes:
+     - /var/run/docker.sock:/var/run/docker.sock:ro
+     - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    #  - /proc/:/host/proc/:ro
+     - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
+    #  - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+     - /etc/passwd:/etc/passwd:ro # LIVE PROCESSES
