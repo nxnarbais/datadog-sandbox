@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <style>
+        .mdl-dialog {
+          width: 600px;
+        }
+    </style>
+  </head>
+  <body>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
+    <div
+      class="chart-container"
+    ></div>
+
+    <!-- https://getmdl.io/components/#dialog-section -->
+    <dialog id="user_details" class="mdl-dialog">
+        <div class="mdl-dialog__actions">
+            <button type="button" class="mdl-button close">Close</button>
+        </div>
+    </dialog>
+
+    <script>
+        const dialog_user_details = document.querySelector('#user_details'); 
+        if (!dialog_user_details.showModal) {
+            dialogPolyfill.registerDialog(dialog_user_details);
+        }
+        dialog_user_details.querySelector('.close').addEventListener('click', function() {
+            dialog_user_details.close();
+        });
+
+        const userHighlightBorderWidth = '8px'
+        const deepPurple = '#7700ff'
+        const deepGreen = '#33bb00'
+        const orange = '#ff8800'
+        const black = '#000000'
+
+        const userStrategic = '#7700ff'
+        const userTechnical = '#33bb00'
+        const userPowerUser = '#aaffaa'
+        const userBlocker = '#ff8800'
+        const userToBuild = '#000000'
+
+        const chart = new d3.OrgChart()
+            .container('.chart-container')
+
+            .nodeHeight((d) => 85)
+            .nodeWidth((d) => 220)
+            .childrenMargin((d) => 50)
+            .compactMarginBetween((d) => 25)
+            .compactMarginPair((d) => 50)
+            .neighbourMargin((a, b) => 25)
+            .siblingsMargin((d) => 25)
+
+            // .buttonContent(({ node, state }) => {
+            // return `<div style="px;color:#716E7B;border-radius:5px;padding:4px;font-size:10px;margin:auto auto;background-color:white;border: 1px solid #E4E2E9"> <span style="font-size:9px">${
+            //     node.children
+            //     ? `<i class="fas fa-angle-up"></i>`
+            //     : `<i class="fas fa-angle-down"></i>`
+            // }</span> ${node.data._directSubordinates}  </div>`;
+            // })
+            // .linkUpdate(function (d, i, arr) {
+            //     d3.select(this)
+            //         .attr('stroke', (d) =>
+            //         d.data._upToTheRootHighlighted ? '#152785' : '#E4E2E9'
+            //         )
+            //         .attr('stroke-width', (d) =>
+            //         d.data._upToTheRootHighlighted ? 5 : 1
+            //         );
+
+            //     if (d.data._upToTheRootHighlighted) {
+            //         d3.select(this).raise();
+            //     }
+            // })
+            .nodeContent(function (d, i, arr, state) {
+//                 const color = d.data.color || '#FFFFFF';
+//                 return `
+//                 <div style="font-family: 'Inter', sans-serif;background-color:${color}; position:absolute;margin-top:-1px; margin-left:-1px;width:${d.width}px;height:${d.height}px;border-radius:10px;border: 1px solid #E4E2E9">
+//                     <div style="background-color:${color};position:absolute;margin-top:-25px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
+//                     <img src=" ${
+//                         d.data.imageUrl
+//                     }" style="position:absolute;margin-top:-20px;margin-left:${20}px;border-radius:100px;width:40px;height:40px;" />
+                    
+//                     <div style="color:#08011E;position:absolute;right:20px;top:17px;font-size:10px;"><i class="fas fa-ellipsis-h"></i></div>
+
+//                     <div style="font-size:15px;color:#08011E;margin-left:20px;margin-top:32px"> ${
+//                     d.data.name
+//                     } </div>
+//                     <div style="color:#716E7B;margin-left:20px;margin-top:3px;font-size:10px;"> ${
+//                     d.data.positionName
+//                     }<br />
+//                     ${d.data.email} </div>
+//                 </div>
+// `;
+                console.log({d})
+                const color = d.data.Color || '#FFFFFF';
+                // console.log(d.data['Champion Category'])
+                const borderWidth = d.data['Champion Category'] === "" ? "1px" : userHighlightBorderWidth;
+                let borderCSS;
+                switch (d.data['Champion Category']) {
+                    case 'Strategic':
+                        borderCSS = borderWidth + " solid " + deepPurple;
+                        break;
+                    case 'Technical':
+                        borderCSS = borderWidth + " solid " + deepGreen
+                        break;
+                    case 'Power User':
+                        borderCSS = borderWidth + " dashed " + deepGreen
+                        break;
+                    case 'To Build':
+                        borderCSS = borderWidth + " dashed " + black
+                        break;
+                    case 'Blocker':
+                        borderCSS = borderWidth + " solid " + orange
+                        break;
+                    default:
+                        borderCSS = borderWidth + " solid " + '#E4E2E9'
+                }
+                return `
+                <div style="font-family: 'Inter', sans-serif;background-color:${color}; position:absolute;margin-top:-1px; margin-left:-1px;width:${d.width}px;height:${d.height}px;border-radius:10px;border: ${borderCSS}">
+                    <div style="background-color:${color};position:absolute;margin-top:-25px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
+                    <img src=" ${
+                        d.data.imageUrl
+                    }" style="position:absolute;margin-top:-20px;margin-left:${20}px;border-radius:100px;width:40px;height:40px;" />
+                    
+                    <div style="color:#08011E;position:absolute;right:20px;top:17px;font-size:10px;"><i class="fas fa-ellipsis-h"></i></div>
+
+                    <div style="font-size:15px;color:#08011E;margin-left:20px;margin-top:32px"> ${
+                    d.data.Name
+                    } </div>
+                    <div style="color:#716E7B;margin-left:20px;margin-top:3px;font-size:10px;"> ${
+                    d.data.Role
+                    }<br />
+                    ${d.data.Team} </div>
+                </div>
+`;
+
+            })
+            .onNodeClick(d => {
+                const keys = Object.keys(d)
+                const table = `<table>
+                    ${keys.map(k => {
+                        if (k.startsWith('_')) { return null }
+                        if (['imageUrl','id','parentId','Color'].includes(k)) { return null }
+                        return `<tr>
+                            <th>${k}</th>
+                            <td>${d[k]}</td>
+                        </tr>`
+                    }).join("")}
+                    </table>
+                `           
+                const dialogHTML =  `
+                    <h4 class="mdl-dialog__title">${d.Name}</h4>
+                    <div class="mdl-dialog__content">
+                        ${table}
+                    </div>
+                `    
+                // alert(table)
+                // console.log({ userDetails: d })
+                
+                let content = dialog_user_details.querySelector('div#userDetails')
+                // console.log(content)
+                if (content != null) {
+                    content.innerHTML = dialogHTML;
+                } else {
+                    content = document.createElement('div');
+                    content.setAttribute('id','userDetails')
+                    content.innerHTML = dialogHTML;
+                    dialog_user_details.prepend(content)
+                }
+                dialog_user_details.showModal()
+
+            })
+
+        // With JSON object
+        const dataStr = "<?= orgChartCSV ?>"
+        const data = JSON.parse(dataStr)
+
+        chart.data(data)
+            .render()
+            .expandAll()
+
+        // // With csv loading
+        // d3.csv(
+        //     'https://raw.githubusercontent.com/bumbeishvili/sample-data/main/org.csv'
+        // ).then(data => {
+        //     console.log({ data })
+        //     chart.data(data)
+        //         .render()
+        //         .expandAll()
+        // });
+    </script>
+
+    <!-- <input type="button" value="Close"
+    onclick="google.script.host.close()" /> -->
+    <button
+        type="button"
+        class="mdl-button"
+        value="Close"
+        onclick="google.script.host.close()">
+            Close gScript
+    </button>
+  </body>
+</html>
