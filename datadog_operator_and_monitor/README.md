@@ -19,7 +19,7 @@ To redirect traffic to localhost
 minikube tunnel
 ```
 
-## Installation 
+## Deployment with Operator
 
 [Datadog doc](https://docs.datadoghq.com/getting_started/containers/datadog_operator)
 
@@ -32,7 +32,7 @@ For the secrets, follow the instructions below
 *Note: You have an error message about PodDisruptionBudget? It looks like in k8s 1.26 it's not policy/v1beta1 but policy/v1.*
 
 Deploy the agent and the monitors:
-1. `kubectl apply -f datadog-agent.yaml`
+1. `kubectl apply -f datadog-agent-v1.yaml`
 1. `kubectl apply -f datadog-monitors.yaml`
 
 ## Check the new resources
@@ -53,3 +53,5 @@ kubectl apply -f datadog-agent.yaml
 - doc: https://docs.datadoghq.com/getting_started/containers/datadog_operator - many links at the bottom
 - blog post: https://www.datadoghq.com/blog/create-manage-kubernetes-alerts-datadog/
 - why an operator https://www.datadoghq.com/blog/datadog-operator/
+- operator config v2alpha1 https://github.com/DataDog/datadog-operator/blob/main/docs/configuration.v2alpha1.md
+- datadog monitor https://github.com/DataDog/datadog-operator/blob/main/docs/datadog_monitor.md
