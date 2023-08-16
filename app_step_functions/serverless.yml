@@ -24,8 +24,8 @@ provider:
   name: aws
   runtime: python3.9
   region: eu-west-3
-  environment:
-    DD_API_KEY: "not_sure_why_i_did_that"
+  # environment:
+  #   DD_API_KEY: "not_sure_why_i_did_that"
 
 # you can add statements to the Lambda function's IAM Role here
 #  iam:
@@ -265,9 +265,10 @@ stepFunctions:
 custom:
   datadog:
     site: datadoghq.com
-    apiKeySecretArn: arn:aws:secretsmanager:eu-west-3:601427279990:secret:datadog_api_key-qr4kyS
-    forwarderArn: arn:aws:lambda:eu-west-3:601427279990:function:datadog-forwarder
+    apiKeySecretArn: arn:aws:secretsmanager:eu-west-3:123:secret:narbais_datadog_api_key-123
+    forwarderArn: arn:aws:lambda:eu-west-3:123:function:narbais-datadog-forwarder
     enableStepFunctionTracing: true
+    # apiKey: 'some_api_key' # only relevant for debuggin otherwise use the apiKeySecretArn
     mergeStepFunctionAndLambdaTraces: true
   pythonRequirements:
     dockerizePip: non-linux

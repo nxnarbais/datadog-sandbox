@@ -11,11 +11,11 @@ resource "aws_cloudformation_stack" "narbais_datadog_forwarder" {
   name         = "narbais-datadog-forwarder"
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"]
   parameters   = {
-    DdApiKeySecretArn  = "REPLACE ME WITH THE SECRETS ARN",
+    # DdApiKeySecretArn  = "REPLACE ME WITH THE SECRETS ARN",
     DdApiKeySecretArn  = aws_secretsmanager_secret.dd_api_key.arn,
     # DdSite             = "<code class="js-region-param region-param" data-region-param="dd_site"></code>",
     DdSite             = "datadoghq.com",
-    FunctionName       = "datadog-forwarder"
+    FunctionName       = "narbais-datadog-forwarder"
   }
-  template_url = "https://datadog-cloudformation-template.s3.amazonaws.com/aws/forwarder/latest.yaml"
+  template_url = "https://datadog-cloudformation-template.s3.amazonaws.com/aws/forwarder/3.83.0.yaml"
 }

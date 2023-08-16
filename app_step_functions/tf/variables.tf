@@ -23,7 +23,7 @@ variable "region" {
 }
 
 resource "aws_secretsmanager_secret" "dd_api_key" {
-  name        = "datadog_api_key"
+  name        = "narbais_datadog_api_key"
   description = "Encrypted Datadog API Key"
 }
 
