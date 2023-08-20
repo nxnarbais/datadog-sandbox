@@ -1,0 +1,70 @@
+# Complete values.yaml https://github.com/vectordotdev/helm-charts/blob/develop/charts/vector/values.yaml
+# Helm deployment doc https://vector.dev/docs/setup/installation/package-managers/helm/
+
+role: Aggregator
+
+env:
+  - name: DD_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: datadog-secrets
+        key: DD_API_KEY
+
+# secrets:
+#   # secrets.generic -- Each Key/Value will be added to the Secret's data key, each value should be raw and NOT base64
+#   # encoded. Any secrets can be provided here. It's commonly used for credentials and other access related values.
+#   # **NOTE: Don't commit unencrypted secrets to git!**
+#   # generic: {}
+#   generic:
+#     # my_variable: "my-secret-value"
+#     datadog_api_key: "${DD_API_KEY}"
+#     # awsAccessKeyId: "access-key"
+#     # awsSecretAccessKey: "secret-access-key"
+
+service:
+  ports: 
+    - name: not-sure-why-i-need-that
+      port: 8080
+      protocol: TCP
+
+customConfig:
+  sources:
+    dummy_logs:
+      type: demo_logs
+      format: shuffle
+      interval: 30
+      lines: ["Line 1", "Line 2", "Line 3", "Line 4", "Line 5", "Line 6"]
+    dummy_logs_json:
+      type: demo_logs
+      format: json
+      interval: 5
+    dummy_logs_apache:
+      type: demo_logs
+      format: apache_common
+      interval: 10
+    dummy_logs_syslog:
+      type: demo_logs
+      format: syslog
+      interval: 15
+  sinks:
+    datadog:
+      type: datadog_logs
+      inputs:
+        - dummy_logs
+        - dummy_logs_json
+        - dummy_logs_apache
+        - dummy_logs_syslog
+      default_api_key: ${DD_API_KEY}
+      region: us
+      site: datadoghq.com
+      compression: gzip
+    print:
+      type: console
+      inputs:
+        # - dummy_logs
+        - dummy_logs_json
+        - dummy_logs_apache
+        - dummy_logs_syslog
+      target: stdout
+      encoding:
+        codec: json

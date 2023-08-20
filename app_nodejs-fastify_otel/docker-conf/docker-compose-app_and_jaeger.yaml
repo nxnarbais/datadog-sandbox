@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+
+  node:
+    image: "node:16-slim"
+    container_name: dd-node
+    working_dir: /home/node/app
+    environment:
+      # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md
+      - OTEL_SERVICE_NAME=snoopy
+      - OTEL_LOG_LEVEL=DEBUG
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger_app:4318
+    volumes:
+      - ../:/home/node/app
+    ports:
+      - 3000:3000/tcp
+    # command: "node --require './tracing.js' server.js"
+    command: "npm run start"
+    links:
+      - jaeger
+
+  # Jaeger
+  # Get started: https://www.jaegertracing.io/docs/1.38/getting-started/
+  jaeger:
+    container_name: jaeger_app
+    image: jaegertracing/all-in-one:1.38
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 4319:4317
+      - 4320:4318
+      - 5778:5778
+      - 16686:16686
+      - 14268:14268
+      - 14269:14269
+      - 14250:14250
+      - 9411:9411
+
+

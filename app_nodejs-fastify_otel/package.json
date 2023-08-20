@@ -1,0 +1,21 @@
+{
+  "name": "nodejs-fastify",
+  "version": "0.1.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --require './tracing.js' server.js",
+    "start-logs": "node --require './tracing_in_logs.js' server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@opentelemetry/api": "^1.2.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.33.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.33.0",
+    "@opentelemetry/sdk-node": "^0.33.0",
+    "axios": "^1.1.2",
+    "fastify": "^3.24.0"
+  }
+}

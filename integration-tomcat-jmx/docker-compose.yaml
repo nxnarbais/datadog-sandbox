@@ -1,0 +1,64 @@
+version: '3.7'
+services:
+
+  tomcat:
+    container_name: tomcat-server
+    image: tomcat:latest
+    ports:
+      - '8080:8080' # App port
+      - '9012:9012' # JMX port
+    environment:
+      - CATALINA_OPTS=-Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=9012 -Dcom.sun.management.jmxremote.rmi.port=9012 -Dcom.sun.management.jmxremote.local.only=false
+      - JAVA_OPTS=-Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=9012 -Dcom.sun.management.jmxremote.rmi.port=9012 -Dcom.sun.management.jmxremote.local.only=false
+    volumes:
+      - ./index.html:/usr/local/tomcat/webapps/test/index.html
+    labels:
+      com.datadoghq.ad.check_names: '["tomcat","http_check"]'
+      com.datadoghq.ad.init_configs: '[{"is_jmx":true,"collect_default_metrics":true},{}]'
+      com.datadoghq.ad.instances: '[
+          {
+            "host":"%%host%%",
+            "port":"9012"
+          },{
+            "name":"sandbox_tomcat",
+            "url":"http://%%host%%:8080/test",
+            "timeout":1
+          }]'
+      com.datadoghq.ad.logs: '[{"source": "tomcat", "service": "sandbox_tomcat"}]'
+
+  datadog:
+    container_name: datadog-agent
+    image: datadog/agent:7.26.0-jmx
+    # image: datadog/agent:latest-jmx
+    # image: gcr.io/datadoghq/agent:latest-jmx
+    # env_file:
+    #   - ../.env
+    environment:
+      ## GLOBALS
+      - DD_API_KEY
+      - DD_SITE
+      - DD_HOSTNAME=narbais.sandbox
+      - DD_TAGS=env:local team:ddogcrew
+      - DD_AC_EXCLUDE=name:datadog-agent # exclude this container from data collection
+      ## TAGS
+      - DD_DOCKER_LABELS_AS_TAGS=true
+      - DD_DOCKER_ENV_AS_TAGS=true
+      ## APM https://docs.datadoghq.com/agent/docker/apm/
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      ## LOGS https://docs.datadoghq.com/agent/docker/log/
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      ## LIVE PROCESSES https://docs.datadoghq.com/graphing/infrastructure/process/?tab=docker
+      - DD_PROCESS_AGENT_ENABLED=true
+      ## DOGSTATSD
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+    ports:
+      - 8126:8126/tcp # APM available from any host
+      - 8125:8125/udp # Dogstatsd
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+      - /etc/passwd:/etc/passwd:ro # LIVE PROCESSES
+  

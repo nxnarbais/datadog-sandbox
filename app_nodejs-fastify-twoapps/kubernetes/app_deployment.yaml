@@ -1,0 +1,179 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app1-deployment
+  labels:
+    app: backend-app1
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "backend-app1"
+    tags.datadoghq.com/version: "0.1.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-app1
+  template:
+    metadata:
+      labels:
+        app: backend-app1
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "backend-app1"
+        tags.datadoghq.com/version: "0.1.0"
+      annotations:
+        ad.datadoghq.com/mongo.logs: '[{"source":"fastify","service":"backend-app1"}]'
+    spec:
+      containers:
+      - name: backend-app1
+        image: node:16
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+          - name: DD_ENV
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/env']
+          - name: DD_SERVICE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/service']
+          - name: DD_VERSION
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/version']
+          - name: DD_TRACE_DEBUG
+            value: 'true'
+          # - name: DD_TRACE_AGENT_URL
+          #   value: 'http://ddrelease-datadog.default.svc:8126'
+          - name: DD_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_PROFILING_ENABLED
+            value: "true"
+          - name: DD_LOGS_INJECTION
+            value: "true"
+          - name: DD_TRACE_SAMPLE_RATE
+            value: "1"
+        ports:
+        - containerPort: 3000
+        workingDir: /home/node/app
+        command: ["npm", "run", "start"]
+        volumeMounts:
+        - mountPath: /home/node/app
+          name: backend-app1-volume
+      volumes:
+      - name: backend-app1-volume
+        hostPath:
+          path: /app/datadog-sandbox/app_nodejs-fastify-twoapps/app1
+          type: Directory
+
+---
+# https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-app1-service
+spec:
+  selector:
+    app: backend-app1
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app2-deployment
+  labels:
+    app: backend-app2
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "backend-app2"
+    tags.datadoghq.com/version: "0.1.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-app2
+  template:
+    metadata:
+      labels:
+        app: backend-app2
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "backend-app2"
+        tags.datadoghq.com/version: "0.1.0"
+      annotations:
+        ad.datadoghq.com/mongo.logs: '[{"source":"fastify","service":"backend-app2"}]'
+    spec:
+      containers:
+      - name: backend-app2
+        image: node:16
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+          - name: DD_ENV
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/env']
+          - name: DD_SERVICE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/service']
+          - name: DD_VERSION
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/version']
+          - name: DD_TRACE_DEBUG
+            value: 'true'
+          # - name: DD_TRACE_AGENT_URL
+          #   value: 'http://ddrelease-datadog.default.svc:8126'
+          - name: DD_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_PROFILING_ENABLED
+            value: "true"
+          - name: DD_LOGS_INJECTION
+            value: "true"
+          - name: DD_TRACE_SAMPLE_RATE
+            value: "1"
+        ports:
+        - containerPort: 3000
+        workingDir: /home/node/app
+        command: ["npm", "run", "start"]
+        volumeMounts:
+        - mountPath: /home/node/app
+          name: backend-app2-volume
+      volumes:
+      - name: backend-app2-volume
+        hostPath:
+          path: /app/datadog-sandbox/app_nodejs-fastify-twoapps/app2
+          type: Directory
+
+---
+# https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-app2-service
+spec:
+  selector:
+    app: backend-app2
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 3000
+      nodePort: 30002

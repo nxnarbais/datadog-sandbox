@@ -1,0 +1,174 @@
+# This is a basic workflow that is manually triggered
+name: Manual workflow
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      name:
+        # Friendly description to be shown in the UI instead of 'name'
+        description: 'Person to greet'
+        # Default value if no value is explicitly provided
+        default: 'World'
+        # Input has to be provided for the workflow to run
+        required: true
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "greet"
+  greet:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Runs a single command using the runners shell
+    - name: Send greeting
+      run: echo "Hello ${{ github.event.inputs.name }}"
+
+  # Run Synthetics tests using the test public IDs
+  e2e_testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Run Datadog Synthetics tests
+        uses: DataDog/synthetics-ci-github-action@v0.10.0
+        with:
+          api_key: ${{secrets.DD_API_KEY}}
+          app_key: ${{secrets.DD_APP_KEY}}
+          public_ids: 'h3b-v5f-mgv, 4xu-rjr-38v'
+  
+  service_catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup service catalog for service-example
+        run: |
+          # Curl command
+          curl -X POST "https://api.datadoghq.com/api/v2/services/definitions" \
+          -H "Accept: application/json" \
+          -H "Content-Type: application/json" \
+          -H "DD-API-KEY: ${{secrets.DD_API_KEY}}" \
+          -H "DD-APPLICATION-KEY: ${{secrets.DD_APP_KEY}}" \
+          -d @- << EOF
+          {
+            "contacts": [
+              {
+                "contact": "contact@datadoghq.com",
+                "name": "Team Email",
+                "type": "email"
+              }
+            ],
+            "dd-service": "service-example",
+            "dd-team": "my-team",
+            "docs": [
+              {
+                "name": "Architecture",
+                "provider": "google drive",
+                "url": "https://gdrive/mydoc"
+              }
+            ],
+            "extensions": {
+              "myorgextension": "extensionvalue"
+            },
+            "integrations": {
+              "opsgenie": {
+                "region": "US",
+                "service-url": "https://my-org.opsgenie.com/service/123e4567-e89b-12d3-a456-426614174000"
+              },
+              "pagerduty": "https://my-org.pagerduty.com/service-directory/PMyService"
+            },
+            "links": [
+              {
+                "name": "Runbook",
+                "type": "runbook",
+                "url": "https://my-runbook"
+              }
+            ],
+            "repos": [
+              {
+                "name": "Source Code",
+                "provider": "GitHub",
+                "url": "https://github.com/DataDog/schema"
+              }
+            ],
+            "schema-version": "v2",
+            "tags": [
+              "my:tag",
+              "service:tag"
+            ],
+            "team": "my-team"
+          }
+          EOF
+      - name: Setup service catalog for bitsapp
+        run: |
+          # Curl command
+          curl -X POST "https://api.datadoghq.com/api/v2/services/definitions" \
+          -H "Accept: application/json" \
+          -H "Content-Type: application/json" \
+          -H "DD-API-KEY: ${{secrets.DD_API_KEY}}" \
+          -H "DD-APPLICATION-KEY: ${{secrets.DD_APP_KEY}}" \
+          -d @- << EOF
+          {
+            "contacts": [
+              {
+                "contact": "technical_post_sales@dd.com",
+                "name": "TPS Email",
+                "type": "email"
+              }
+            ],
+            "dd-service": "bitsapp",
+            "dd-team": "technical_post_sales",
+            "docs": [
+              {
+                "name": "Datadog doc on Service Catalog",
+                "provider": "datadog doc",
+                "url": "https://docs.datadoghq.com/tracing/service_catalog/setup/"
+              },
+              {
+                "name": "API Docs",
+                "url": "https://fake-org.github.io/hello-world-api-docs",
+                "provider": "github"
+              }
+            ],
+            "integrations": {
+              "opsgenie": {
+                "region": "US",
+                "service-url": "https://my-org.opsgenie.com/service/123e4567-e89b-12d3-a456-426614174000"
+              },
+              "pagerduty": "https://my-org.pagerduty.com/service-directory/PMyService"
+            },
+            "links": [
+              {
+                "name": "Runbook",
+                "type": "runbook",
+                "url": "https://my-runbook"
+              },
+              {
+                "name": "outage-runbook",
+                "url": "https://fake-org.github.io/hello-world-outage-runbook",
+                "type": "runbook"
+              },
+              {
+                "name": "hello-world dashboard",
+                "url": "https://app.datadoghq.com/dashboard/1234567890",
+                "type": "dashboard"
+              }
+            ],
+            "repos": [
+              {
+                "name": "Source Code",
+                "provider": "GitHub",
+                "url": "https://github.com/nxnarbais/datadog-sandbox"
+              }
+            ],
+            "schema-version": "v2",
+            "tags": [
+              "lang:nodejs",
+              "framework:fastify"
+            ],
+            "team": "technical_post_sales"
+          }
+          EOF

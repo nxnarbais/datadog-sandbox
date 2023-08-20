@@ -1,0 +1,5 @@
+config = {
+    "api_key": "API_KEY",
+    "app_key": "APP_KEY",
+    "api_host": "https://api.datadoghq.com/",
+}

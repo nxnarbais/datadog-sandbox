@@ -1,0 +1,7 @@
+{
+    "apiKey": "API_KEY",
+    "appKey": "APP_KEY",
+    "datadogSite": "datadoghq.com",
+    "files": "**/*.synthetics.json",
+    "subdomain": "app"
+}

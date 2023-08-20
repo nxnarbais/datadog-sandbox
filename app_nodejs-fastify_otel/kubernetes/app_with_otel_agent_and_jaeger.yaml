@@ -1,0 +1,475 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitsapp-deployment
+  labels:
+    app: bitsapp
+  #   tags.datadoghq.com/env: "dev"
+  #   tags.datadoghq.com/service: "bitsapp"
+  #   tags.datadoghq.com/version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitsapp
+  template:
+    metadata:
+      labels:
+        app: bitsapp
+      #   tags.datadoghq.com/env: "dev"
+      #   tags.datadoghq.com/service: "bitsapp"
+      #   tags.datadoghq.com/version: "1.0.0"
+      # annotations:
+      #   ad.datadoghq.com/mongo.logs: '[{"source":"fastify","service":"bitsapp"}]'
+    spec:
+      containers:
+      - name: bitsapp
+        # image: node:16-slim
+        image: node:16
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+        # https://opentelemetry.io/docs/concepts/sdk-configuration/otlp-exporter-configuration/
+        - name: OTEL_SERVICE_NAME
+          value: bitsapp
+        - name: OTEL_LOG_LEVEL
+          value: DEBUG
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          # value: http://otel-collector-service:4318
+          # value: http://jaeger-collector:4318
+          value: "http://$(OTEL_EXPORTER_OTLP_ENDPOINT_HOST):4318"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: env=sandbox,service.namespace=sandbox,service.version=0.1.2,owner=ddog,deployment=blue
+        ports:
+        - containerPort: 3000
+        workingDir: /home/node/app
+        command: ["npm", "run", "start"]
+        volumeMounts:
+        - mountPath: /home/node/app
+          name: bitsapp-volume
+      volumes:
+      - name: bitsapp-volume
+        hostPath:
+          path: /app/datadog-sandbox/app_nodejs-fastify_otel
+          type: Directory
+
+---
+# https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitsapp-service
+spec:
+  selector:
+    app: bitsapp
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30001
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-agent-conf
+  labels:
+    app: opentelemetry
+    component: otel-agent-conf
+data:
+  otel-agent-config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    exporters:
+      logging:
+        loglevel: debug
+      otlphttp:
+        endpoint: http://otel-collector-service:4318
+      otlp:
+        endpoint: "otel-collector.default:4317"
+        tls:
+          insecure: true
+        sending_queue:
+          num_consumers: 4
+          queue_size: 100
+        retry_on_failure:
+          enabled: true
+    processors:
+      batch:
+      memory_limiter:
+        # 80% of maximum memory up to 2G
+        limit_mib: 400
+        # 25% of limit up to 2G
+        spike_limit_mib: 100
+        check_interval: 5s
+    extensions:
+      zpages: {}
+      memory_ballast:
+        # Memory Ballast size should be max 1/3 to 1/2 of memory.
+        size_mib: 165
+    service:
+      extensions: [zpages, memory_ballast]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlphttp, logging]
+          # exporters: [otlp, logging]
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: otel-agent
+  labels:
+    app: opentelemetry
+    component: otel-agent
+spec:
+  selector:
+    matchLabels:
+      app: opentelemetry
+      component: otel-agent
+  template:
+    metadata:
+      labels:
+        app: opentelemetry
+        component: otel-agent
+    spec:
+      containers:
+      - command:
+          - "/otelcol"
+          - "--config=/conf/otel-agent-config.yaml"
+        image: otel/opentelemetry-collector:0.68.0
+        name: otel-agent
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 55679 # ZPages endpoint.
+          hostPort: 55679
+        - containerPort: 4317 # Default OpenTelemetry receiver port (GRPC).
+          hostPort: 4317
+        - containerPort: 4318 # Default OpenTelemetry receiver port (http).
+          hostPort: 4318
+        - containerPort: 8888  # Metrics.
+          hostPort: 8888
+        volumeMounts:
+        - name: otel-agent-config-vol
+          mountPath: /conf
+      volumes:
+        - configMap:
+            name: otel-agent-conf
+            items:
+              - key: otel-agent-config
+                path: otel-agent-config.yaml
+          name: otel-agent-config-vol
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-conf
+  labels:
+    app: opentelemetry
+    component: otel-collector-conf
+data:
+  otel-collector-config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    processors:
+      batch:
+      memory_limiter:
+        # 80% of maximum memory up to 2G
+        limit_mib: 1500
+        # 25% of limit up to 2G
+        spike_limit_mib: 512
+        check_interval: 5s
+    extensions:
+      zpages: {}
+      memory_ballast:
+        # Memory Ballast size should be max 1/3 to 1/2 of memory.
+        size_mib: 683
+    exporters:
+      # Data sources: traces, metrics, logs
+      logging:
+        loglevel: debug
+      otlphttp:
+        endpoint: http://jaeger-collector:4318
+      jaeger:
+        endpoint: "jaeger-collector:14250"
+        tls:
+          insecure: true
+      otlp:
+        endpoint: "http://jaeger-collector:4318"
+        # endpoint: "http://someotlp.target.com:4317" # Replace with a real endpoint.
+        # tls:
+        #   insecure: true
+    service:
+      extensions: [zpages, memory_ballast]
+      pipelines:
+        traces/1:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlphttp, logging]
+          # exporters: [jaeger, logging]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector-service
+  labels:
+    app: opentelemetry
+    component: otel-collector
+spec:
+  ports:
+  - name: otlp-grpc # Default endpoint for OpenTelemetry gRPC receiver.
+    port: 4317
+    protocol: TCP
+    targetPort: 4317
+  - name: otlp-http # Default endpoint for OpenTelemetry HTTP receiver.
+    port: 4318
+    protocol: TCP
+    targetPort: 4318
+  - name: metrics # Default endpoint for querying metrics.
+    port: 8888
+  selector:
+    component: otel-collector
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  labels:
+    app: opentelemetry
+    component: otel-collector
+spec:
+  selector:
+    matchLabels:
+      app: opentelemetry
+      component: otel-collector
+  minReadySeconds: 5
+  progressDeadlineSeconds: 120
+  replicas: 1 #TODO - adjust this to your own requirements
+  template:
+    metadata:
+      labels:
+        app: opentelemetry
+        component: otel-collector
+    spec:
+      containers:
+      - command:
+          - "/otelcol"
+          - "--config=/conf/otel-collector-config.yaml"
+        image: otel/opentelemetry-collector:0.68.0
+        name: otel-collector
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 200m
+            memory: 400Mi
+        ports:
+        - containerPort: 55679 # Default endpoint for ZPages.
+        - containerPort: 4317 # Default endpoint for OpenTelemetry receiver.
+        - containerPort: 14250 # Default endpoint for Jaeger gRPC receiver.
+        - containerPort: 14268 # Default endpoint for Jaeger HTTP receiver.
+        - containerPort: 9411 # Default endpoint for Zipkin receiver.
+        - containerPort: 8888  # Default endpoint for querying metrics.
+        volumeMounts:
+        - name: otel-collector-config-vol
+          mountPath: /conf
+#        - name: otel-collector-secrets
+#          mountPath: /secrets
+      volumes:
+        - configMap:
+            name: otel-collector-conf
+            items:
+              - key: otel-collector-config
+                path: otel-collector-config.yaml
+          name: otel-collector-config-vol
+#        - secret:
+#            name: otel-collector-secrets
+#            items:
+#              - key: cert.pem
+#                path: cert.pem
+#              - key: key.pem
+#                path: key.pem
+
+# https://github.com/jaegertracing/jaeger-kubernetes/blob/master/all-in-one/jaeger-all-in-one-template.yml
+---
+apiVersion: v1
+kind: List
+items:
+- apiVersion: apps/v1
+  # apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: jaeger
+    labels:
+      app: jaeger
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: all-in-one
+  spec:
+    replicas: 1
+    strategy:
+      type: Recreate
+    selector:
+      matchLabels:
+        app: jaeger
+    template:
+      metadata:
+        labels:
+          app: jaeger
+          app.kubernetes.io/name: jaeger
+          app.kubernetes.io/component: all-in-one
+        annotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "16686"
+      spec:
+          containers:
+          -   name: jaeger
+              image: jaegertracing/all-in-one
+              env:
+              - name: COLLECTOR_ZIPKIN_HTTP_PORT
+                value: "9411"
+              - name: COLLECTOR_OTLP_ENABLED
+                value: "true"
+              ports:
+                - containerPort: 5775
+                  protocol: UDP
+                - containerPort: 6831
+                  protocol: UDP
+                - containerPort: 6832
+                  protocol: UDP
+                - containerPort: 5778
+                  protocol: TCP
+                - containerPort: 16686
+                  protocol: TCP
+                - containerPort: 9411
+                  protocol: TCP
+              readinessProbe:
+                httpGet:
+                  path: "/"
+                  port: 14269
+                initialDelaySeconds: 5
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: jaeger-query
+    labels:
+      app: jaeger
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: query
+  spec:
+    ports:
+      - name: query-http
+        port: 3030
+        protocol: TCP
+        targetPort: 16686
+    selector:
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: all-in-one
+    type: LoadBalancer
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: jaeger-collector
+    labels:
+      app: jaeger
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: collector
+  spec:
+    ports:
+    - name: jaeger-collector-http2
+      port: 4318
+      protocol: TCP
+      targetPort: 4318
+    - name: jaeger-collector-tchannel
+      port: 14267
+      protocol: TCP
+      targetPort: 14267
+    - name: jaeger-collector-http
+      port: 14268
+      protocol: TCP
+      targetPort: 14268
+    - name: jaeger-collector-zipkin
+      port: 9411
+      protocol: TCP
+      targetPort: 9411
+    - name: jaeger-collector-jaeger
+      port: 14250
+      # protocol: TCP
+      targetPort: 14250
+    selector:
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: all-in-one
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: jaeger-agent
+    labels:
+      app: jaeger
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: agent
+  spec:
+    ports:
+    - name: agent-zipkin-thrift
+      port: 5775
+      protocol: UDP
+      targetPort: 5775
+    - name: agent-compact
+      port: 6831
+      protocol: UDP
+      targetPort: 6831
+    - name: agent-binary
+      port: 6832
+      protocol: UDP
+      targetPort: 6832
+    - name: agent-configs
+      port: 5778
+      protocol: TCP
+      targetPort: 5778
+    clusterIP: None
+    selector:
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: all-in-one
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: zipkin
+    labels:
+      app: jaeger
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: zipkin
+  spec:
+    ports:
+    - name: jaeger-collector-zipkin
+      port: 9411
+      protocol: TCP
+      targetPort: 9411
+    clusterIP: None
+    selector:
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: all-in-one

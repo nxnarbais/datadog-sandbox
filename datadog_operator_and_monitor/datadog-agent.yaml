@@ -1,0 +1,95 @@
+# https://github.com/DataDog/datadog-operator/blob/main/docs/configuration.v2alpha1.md
+apiVersion: datadoghq.com/v2alpha1
+kind: DatadogAgent
+metadata:
+  name: datadog
+spec:
+  global:
+    site: datadoghq.com
+    credentials:
+      apiSecret:
+        secretName: datadog-secret
+        keyName: api-key
+      appSecret:
+        secretName: datadog-secret
+        keyName: app-key
+    clusterName: macos-minikube
+    tags: ["env:sandbox","owner:narbais","version:20230809"]
+    kubelet:
+      tlsVerify: false # default: true
+  features:
+    # APM USM
+    apm:
+      enabled: true
+      hostPortConfig:
+        enabled: true # default: false (using UDS)
+    usm:
+      enabled: false
+    # LOGS
+    logCollection:
+      enabled: true
+      containerCollectAll: true
+    # LIVE PROCESS AND CONTAINERS
+    liveProcessCollection:
+      enabled: true # default: false - https://docs.datadoghq.com/infrastructure/process/?tab=docker#installation
+    orchestratorExplorer:
+      enabled: true # default: true - https://docs.datadoghq.com/infrastructure/containers/?tab=docker#kubernetes-orchestrator-explorer
+    # SECURITY
+    cws:
+      enabled: true
+    cspm:
+      enabled: true
+    # REMOTE CONFIG
+    admissionController:
+      enabled: true
+    # remoteConfiguration:
+    #   enabled: true # default: false
+  override:
+    # Add overrides to the (Node) Agent 
+    nodeAgent:
+      image:
+        name: agent
+        tag: 7.46.0
+      # Create a ConfigMap and mount in this "tcp_check.yaml" file
+      extraConfd:
+        configDataMap:
+          tcp_check.yaml: |-
+            init_config:
+            instances:
+              - name: trace-agent
+                host: localhost
+                port: 8126
+      # Configurations specific to the containers "agent" and "trace-agent"
+      containers: 
+        agent: 
+          env:
+            - name: DD_REMOTE_CONFIGURATION_ENABLED
+              value: "true"
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+        trace-agent:
+          logLevel: debug
+          env:
+            - name: DD_REMOTE_CONFIGURATION_ENABLED
+              value: "true"
+    # Add overrides to the Cluster Agent
+    clusterAgent:
+      # replicas: 2
+      # Create a ConfigMap and mount in this "http_check.yaml" file for a Cluster Check
+      extraConfd:
+        configDataMap:
+          http_check.yaml: |-
+            cluster_check: true
+            init_config:
+            instances:
+              - name: example-cluster-check
+                url: https://example.com
+    # Add overrides to the Cluster Check Runner
+    clusterChecksRunner:
+      containers:
+        agent:
+          env:
+            - name: FOO
+              value: BAR

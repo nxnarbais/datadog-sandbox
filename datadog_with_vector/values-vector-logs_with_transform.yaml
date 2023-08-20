@@ -1,0 +1,85 @@
+# Complete values.yaml https://github.com/vectordotdev/helm-charts/blob/develop/charts/vector/values.yaml
+# Helm deployment doc https://vector.dev/docs/setup/installation/package-managers/helm/
+
+role: Aggregator
+
+env:
+  - name: DD_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: datadog-secrets
+        key: DD_API_KEY
+
+secrets:
+  # secrets.generic -- Each Key/Value will be added to the Secret's data key, each value should be raw and NOT base64
+  # encoded. Any secrets can be provided here. It's commonly used for credentials and other access related values.
+  # **NOTE: Don't commit unencrypted secrets to git!**
+  # generic: {}
+  generic:
+    # my_variable: "my-secret-value"
+    datadog_api_key: "${DD_API_KEY}"
+    # awsAccessKeyId: "access-key"
+    # awsSecretAccessKey: "secret-access-key"
+
+customConfig:
+  sources:
+    dummy_logs:
+      type: demo_logs
+      format: shuffle
+      interval: 30
+      lines: ["Line 1", "Line 2", "Line 3", "Line 4", "Line 5", "Line 6"]
+    dummy_logs_json:
+      type: demo_logs
+      format: json
+      interval: 5
+    dummy_logs_apache:
+      type: demo_logs
+      format: apache_common
+      interval: 10
+    dummy_logs_syslog:
+      type: demo_logs
+      format: syslog
+      interval: 15
+    agent:
+      type: datadog_agent
+      address: '0.0.0.0:8080'
+      store_api_key: false
+  transforms:
+    logs_syslog_parsed:
+      type: remap
+      inputs:
+        - dummy_logs_syslog
+      source: . |= parse_syslog!(.message)
+    logs_source_added:
+      type: remap
+      inputs:
+        - dummy_logs
+        - dummy_logs_json
+      source: |-
+        .ddsource = "vector" # add (special attribute https://vector.dev/docs/reference/configuration/sinks/datadog_logs/#attributes)
+        .ip = .host # map
+        .random.sub_category = encode_base64(random_bytes(4)) # create
+        .tags.hostname = del(.tags.host) # rename
+        del(.tags.email) # delete
+  sinks:
+    datadog:
+      type: datadog_logs
+      inputs:
+        - agent
+        - dummy_logs*
+        - logs_syslog_parsed
+        - logs_source_added
+      default_api_key: "${DD_API_KEY}"
+      site: datadoghq.com
+      compression: gzip
+    print:
+      type: console
+      inputs:
+        # - dummy_logs
+        # - dummy_logs_json
+        # - dummy_logs_apache
+        # - dummy_logs_syslog
+        - logs_syslog_parsed
+      target: stdout
+      encoding:
+        codec: json

@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitsapp-deployment
+  labels:
+    app: bitsapp
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "bitsapp"
+    tags.datadoghq.com/version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitsapp
+  template:
+    metadata:
+      labels:
+        app: bitsapp
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "bitsapp"
+        tags.datadoghq.com/version: "1.0.0"
+      annotations:
+        ad.datadoghq.com/mongo.logs: '[{"source":"fastify","service":"bitsapp"}]'
+    spec:
+      containers:
+      - name: bitsapp
+        # image: node:16-slim
+        image: node:16
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+        # https://opentelemetry.io/docs/concepts/sdk-configuration/otlp-exporter-configuration/
+        - name: OTEL_SERVICE_NAME
+          value: bitsapp
+        - name: OTEL_LOG_LEVEL
+          value: DEBUG
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          # value: http://otel-collector-service:4318
+          # value: http://jaeger-collector:4318
+          value: "http://$(OTEL_EXPORTER_OTLP_ENDPOINT_HOST):4318"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: env=sandbox,service.namespace=sandbox,service.version=0.1.2,owner=ddog,deployment=blue
+        ports:
+        - containerPort: 3000
+        workingDir: /home/node/app
+        command: ["npm", "run", "start"]
+        volumeMounts:
+        - mountPath: /home/node/app
+          name: bitsapp-volume
+      volumes:
+      - name: bitsapp-volume
+        hostPath:
+          path: /app/datadog-sandbox/app_nodejs-fastify_otel
+          type: Directory
+
+---
+# https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitsapp-service
+spec:
+  selector:
+    app: bitsapp
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30001
