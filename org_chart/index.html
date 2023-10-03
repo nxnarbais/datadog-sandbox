@@ -4,49 +4,244 @@
     <base target="_top">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+    <!-- <style>
         .mdl-dialog {
           width: 600px;
         }
-    </style>
+    </style> -->
   </head>
   <body>
+    <main class="d-flex flex-nowrap">      
+        <div class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary" style="width: 280px;">
+            <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                <svg class="bi pe-none me-2" width="40" height="32"><use xlink:href="#bootstrap"></use></svg>
+                <span class="fs-4">Org Chart</span>
+            </a>
+            <hr>
+            <select class="form-select" aria-label="customer-list" id="customerSel">
+            </select>
+            <hr>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li>
+                    <a href="#" class="nav-link" id="expand-all">
+                        <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"></use></svg>
+                        Expand All
+                    </a>
+                </li>
+            </ul>
+            <hr>
+            <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                <!-- <svg class="bi pe-none me-2" width="40" height="32"></svg> -->
+                <span class="fs-6">Legend</span>
+            </div>
+            <ul class="nav nav-pills flex-column mb-auto" id="legend">
+                <!-- <li>
+                    <a href="#" class="nav-link disabled"
+                        style="border: 3px solid red"
+                    >
+                        Strategic Champion
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link disabled"
+                        style="border: 3px solid red"
+                    >
+                        Technical Champion
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link disabled"
+                        style="border: 3px solid red"
+                    >
+                        Blocker
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link disabled"
+                        style="border: 3px solid red"
+                    >
+                        To build
+                    </a>
+                </li> -->
+            </ul>
+        </div>
+      
+        <!-- <div class="b-example-divider b-example-vr"></div> -->
+
+        <div class="container-fluid">
+            <div
+                class="chart-container"
+            ></div>
+
+            <!-- MODAL: https://getmdl.io/components/#dialog-section -->
+            <dialog id="user_details">
+                <div>
+                    <button type="button" class="mdl-button close">Close</button>
+                </div>
+            </dialog>
+        </div>
+    </main>
+
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
-    <div
-      class="chart-container"
-    ></div>
-
-    <!-- https://getmdl.io/components/#dialog-section -->
-    <dialog id="user_details" class="mdl-dialog">
-        <div class="mdl-dialog__actions">
-            <button type="button" class="mdl-button close">Close</button>
-        </div>
-    </dialog>
 
     <script>
-        const dialog_user_details = document.querySelector('#user_details'); 
+        /**
+         * GET CONTENT
+         */
+        // With JSON object
+        // const dataStr = "<?= orgChartCSV ?>"
+        // const data = JSON.parse(dataStr)
+        const data = {
+            customer1: [{"id":"CUSTOMER1","parentId":"","Name":"CUSTOMER1","Email":"org.com","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"DPT1","parentId":"CUSTOMER1","Name":"DPT1","Email":"","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"DPT2","parentId":"CUSTOMER1","Name":"DPT2","Email":"","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"DPT3","parentId":"CUSTOMER1","Name":"DPT3","Email":"","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"Leader Dpt 1","parentId":"DPT1","Name":"Leader Dpt 1","Email":"","Role":"Head of Internal Cloud Service Engineering","Entity":"Business","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"Not Contacted","Comment":"","Location":"","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Leader Dpt 2","parentId":"DPT2","Name":"Leader Dpt 2","Email":"","Role":"Global Head of Digital Cloud & Platform","Entity":"Something","Color":"#bbddff","Team":"","Last contacted":"","Champion Category":"To Build","Comment":"","Location":"","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Team A","parentId":"Leader Dpt 1","Name":"Team A","Email":"","Role":"Department","Entity":"","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"Team B","parentId":"Leader Dpt 1","Name":"Team B","Email":"","Role":"Department","Entity":"","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"Team C","parentId":"Leader Dpt 2","Name":"Team C","Email":"","Role":"Department","Entity":"","Color":"#bbddff","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"Mr. Blocker","parentId":"Team A","Name":"Mr. Blocker","Email":"bloker@company.com","Role":"Cloud Engineer","Entity":"Team A","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"Blocker","Comment":"","Location":"New Jersey","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Mr Champion","parentId":"Team A","Name":"Mr Champion","Email":"","Role":"Cloud Engineer","Entity":"Team A","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"Strategic","Comment":"","Location":"","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Mr Power User","parentId":"Team A","Name":"Mr Power User","Email":"","Role":"Observability Lead","Entity":"Team A","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"Power User","Comment":"","Location":"France","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Mr Technical User","parentId":"Team B","Name":"Mr Technical User","Email":"","Role":"Engineer","Entity":"Team B","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"Technical","Comment":"","Location":"","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Mr To Build","parentId":"Team B","Name":"Mr To Build","Email":"","Role":"Engineer","Entity":"Team B","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"To Build","Comment":"","Location":"","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Someone beautiful","parentId":"Team C","Name":"Someone beautiful","Email":"","Role":"Director","Entity":"Team C","Color":"#bbddff","Team":"","Last contacted":"","Champion Category":"Not Contacted","Comment":"","Location":"","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"}],
+            customer2: [{"id":"CUSTOMER2","parentId":"","Name":"CUSTOMER2","Email":"org.com","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"DPT1","parentId":"CUSTOMER2","Name":"DPT1","Email":"","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"DPT2","parentId":"CUSTOMER2","Name":"DPT2","Email":"","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"DPT3","parentId":"CUSTOMER2","Name":"DPT3","Email":"","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"Leader Dpt 1","parentId":"DPT1","Name":"Leader Dpt 1","Email":"","Role":"Head of Internal Cloud Service Engineering","Entity":"Business","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"Not Contacted","Comment":"","Location":"","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Leader Dpt 2","parentId":"DPT2","Name":"Leader Dpt 2","Email":"","Role":"Global Head of Digital Cloud & Platform","Entity":"Something","Color":"#bbddff","Team":"","Last contacted":"","Champion Category":"To Build","Comment":"","Location":"","imageUrl":"https://raw.githubusercontent.com/bumbeishvili/Assets/master/Projects/D3/Organization%20Chart/general.jpg"},{"id":"Team A","parentId":"Leader Dpt 1","Name":"Team A","Email":"","Role":"Department","Entity":"","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"Team B","parentId":"Leader Dpt 1","Name":"Team B","Email":"","Role":"Department","Entity":"","Color":"#ddffdd","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"},{"id":"Team C","parentId":"Leader Dpt 2","Name":"Team C","Email":"","Role":"Department","Entity":"","Color":"#bbddff","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"}],
+            customer3: [{"id":"CUSTOMER3","parentId":"","Name":"CUSTOMER3","Email":"org.com","Role":"","Entity":"","Color":"","Team":"","Last contacted":"","Champion Category":"","Comment":"","Location":"","imageUrl":"https://static.vecteezy.com/system/resources/previews/008/214/517/original/abstract-geometric-logo-or-infinity-line-logo-for-your-company-free-vector.jpg"}],
+        }
+        console.log({ data })
+        const sheetNames = Object.keys(data)
+            .filter(sheet => 
+                sheet !== "legend_discussion" 
+                && sheet !== "others"
+                && sheet !== "default")
+        const urlParams = new URLSearchParams(window.location.search);
+        const myParam = urlParams.get('customer');
+        console.log(`Get query param customer=${myParam}`)
+
+        /**
+         * DESIGN CONSTANTS
+         */
+        const userBorderWidth = '4px'
+        const strategicChampionCSS = `border: ${userBorderWidth} solid #7700ff;` // purple
+        const technicalChampionCSS = `border: ${userBorderWidth} solid #33bb00;` // green
+        const powerUserCSS = `border: ${userBorderWidth} dashed #33bb00;` // green
+        const toBuildUserCSS = `border: ${userBorderWidth} dashed #000000;` // black
+        const blockerCSS = `border: ${userBorderWidth} dashed #ff8800;` // orange
+        const notContactedCSS = `background: repeating-linear-gradient(
+                45deg,
+                #fff,
+                #fff 10px,
+                #ccc 10px,
+                #ccc 20px
+            ); border: 1px solid #E4E2E9;` // default gray
+
+        /**
+         * HTML SELECTORS
+         */
+        const modalSelector = "#user_details"
+        const customerDropdownSelector = "select#customerSel"
+        const expandAllSelector = "a#expand-all"
+        const legendSelector = "#legend"
+
+        /**
+         * LEGEND
+         */
+        const legend = [
+            { name: "Strategic", style: strategicChampionCSS },
+            { name: "Technical", style: technicalChampionCSS },
+            { name: "Power User", style: powerUserCSS },
+            { name: "To Build", style: toBuildUserCSS },
+            { name: "Blocker", style: blockerCSS },
+            { name: "Not Contacted", style: notContactedCSS },
+        ]
+        const legendDOM = document.querySelector(legendSelector); 
+        legend.forEach(item => {
+            const liDOM = document.createElement('li');
+            const aDOM = document.createElement('a')
+            aDOM.setAttribute('href', '#')
+            aDOM.setAttribute('class', 'nav-link disabled')
+            aDOM.setAttribute('style', item.style)
+            aDOM.innerHTML = item.name;
+            liDOM.append(aDOM)
+            legendDOM.append(liDOM)
+        })
+        const legendJSON = {}
+        legend.forEach(item => legendJSON[item.name] = item.style)
+        function borderToUserCategory(key) {
+            return legendJSON[key] || "border: solid 1px #E4E2E9"
+        }
+
+        /**
+         * DESIGN NODE CONTENT
+         */
+        function designNodeContent(d, i, arr, state) {
+            const color = d.data.Color || '#FFFFFF';
+            const borderCSS = borderToUserCategory(d.data['Champion Category'])
+            return `
+                <div style="font-family: 'Inter', sans-serif;background-color:${color}; position:absolute;margin-top:-1px; margin-left:-1px;width:${d.width}px;height:${d.height}px;border-radius:10px;${borderCSS}">
+                    <div style="background-color:${color};position:absolute;margin-top:-25px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
+                    <img src=" ${
+                        d.data.imageUrl
+                    }" style="position:absolute;margin-top:-20px;margin-left:${20}px;border-radius:100px;width:40px;height:40px;" />
+                    
+                    <div style="color:#08011E;position:absolute;right:20px;top:17px;font-size:10px;"><i class="fas fa-ellipsis-h"></i></div>
+
+                    <div style="font-size:15px;color:#08011E;margin-left:20px;margin-top:32px"> ${
+                    d.data.Name
+                    } </div>
+                    <div style="color:#716E7B;margin-left:20px;margin-top:3px;font-size:10px;"> ${
+                    d.data.Role
+                    }<br />
+                    ${d.data.Team} </div>
+                </div>
+            `;
+        }
+        /**
+         * DESIGN MODAL CONTENT
+         */
+        function designModalContent(d) {
+            const keys = Object.keys(d)
+            const table = `<table>
+                ${keys.map(k => {
+                    if (k.startsWith('_')) { return null }
+                    if (['imageUrl','id','parentId','Color'].includes(k)) { return null }
+                    return `<tr>
+                        <th>${k}</th>
+                        <td>${d[k]}</td>
+                    </tr>`
+                }).join("")}
+                </table>
+            `           
+            const dialogHTML =  `
+                <h4 class="mdl-dialog__title">${d.Name}</h4>
+                <div class="mdl-dialog__content">
+                    ${table}
+                </div>
+            `    
+            // alert(table)
+            // console.log({ userDetails: d })
+            
+            let content = dialog_user_details.querySelector('div#userDetails')
+            // console.log(content)
+            if (content != null) {
+                content.innerHTML = dialogHTML;
+            } else {
+                content = document.createElement('div');
+                content.setAttribute('id','userDetails')
+                content.innerHTML = dialogHTML;
+                dialog_user_details.prepend(content)
+            }
+            dialog_user_details.showModal()
+        }
+
+        /**
+         * MODAL BEHAVIOR
+         */
+        const dialog_user_details = document.querySelector(modalSelector); 
         if (!dialog_user_details.showModal) {
             dialogPolyfill.registerDialog(dialog_user_details);
         }
         dialog_user_details.querySelector('.close').addEventListener('click', function() {
             dialog_user_details.close();
-        });
+        });        
 
-        const userHighlightBorderWidth = '8px'
-        const deepPurple = '#7700ff'
-        const deepGreen = '#33bb00'
-        const orange = '#ff8800'
-        const black = '#000000'
-
-        const userStrategic = '#7700ff'
-        const userTechnical = '#33bb00'
-        const userPowerUser = '#aaffaa'
-        const userBlocker = '#ff8800'
-        const userToBuild = '#000000'
-
+        /**
+         * ORG CHART ON D3
+         */
         const chart = new d3.OrgChart()
             .container('.chart-container')
 
@@ -78,133 +273,61 @@
             //         d3.select(this).raise();
             //     }
             // })
-            .nodeContent(function (d, i, arr, state) {
-//                 const color = d.data.color || '#FFFFFF';
-//                 return `
-//                 <div style="font-family: 'Inter', sans-serif;background-color:${color}; position:absolute;margin-top:-1px; margin-left:-1px;width:${d.width}px;height:${d.height}px;border-radius:10px;border: 1px solid #E4E2E9">
-//                     <div style="background-color:${color};position:absolute;margin-top:-25px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
-//                     <img src=" ${
-//                         d.data.imageUrl
-//                     }" style="position:absolute;margin-top:-20px;margin-left:${20}px;border-radius:100px;width:40px;height:40px;" />
-                    
-//                     <div style="color:#08011E;position:absolute;right:20px;top:17px;font-size:10px;"><i class="fas fa-ellipsis-h"></i></div>
+            .nodeContent(designNodeContent)
+            .onNodeClick(designModalContent)
 
-//                     <div style="font-size:15px;color:#08011E;margin-left:20px;margin-top:32px"> ${
-//                     d.data.name
-//                     } </div>
-//                     <div style="color:#716E7B;margin-left:20px;margin-top:3px;font-size:10px;"> ${
-//                     d.data.positionName
-//                     }<br />
-//                     ${d.data.email} </div>
-//                 </div>
-// `;
-                console.log({d})
-                const color = d.data.Color || '#FFFFFF';
-                // console.log(d.data['Champion Category'])
-                const borderWidth = d.data['Champion Category'] === "" ? "1px" : userHighlightBorderWidth;
-                let borderCSS;
-                switch (d.data['Champion Category']) {
-                    case 'Strategic':
-                        borderCSS = borderWidth + " solid " + deepPurple;
-                        break;
-                    case 'Technical':
-                        borderCSS = borderWidth + " solid " + deepGreen
-                        break;
-                    case 'Power User':
-                        borderCSS = borderWidth + " dashed " + deepGreen
-                        break;
-                    case 'To Build':
-                        borderCSS = borderWidth + " dashed " + black
-                        break;
-                    case 'Blocker':
-                        borderCSS = borderWidth + " solid " + orange
-                        break;
-                    default:
-                        borderCSS = borderWidth + " solid " + '#E4E2E9'
-                }
-                return `
-                <div style="font-family: 'Inter', sans-serif;background-color:${color}; position:absolute;margin-top:-1px; margin-left:-1px;width:${d.width}px;height:${d.height}px;border-radius:10px;border: ${borderCSS}">
-                    <div style="background-color:${color};position:absolute;margin-top:-25px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
-                    <img src=" ${
-                        d.data.imageUrl
-                    }" style="position:absolute;margin-top:-20px;margin-left:${20}px;border-radius:100px;width:40px;height:40px;" />
-                    
-                    <div style="color:#08011E;position:absolute;right:20px;top:17px;font-size:10px;"><i class="fas fa-ellipsis-h"></i></div>
+        /**
+         * ON NEW CUSTOMER SELECTED
+         */
+        const refreshWithNewData = (e) => {
+            console.log({ fn: "refreshWithNewData", id: e.target.id, value: e.target.value })
+            
+            const currentUrl = window.location.href;
+            const selCustomer = e.target.value
+            const title = selCustomer
+            let url = new URL(currentUrl);
+            url.searchParams.set('customer', selCustomer);
+            // console.log(currentUrl, url.href)
+            window.history.pushState(selCustomer, title, url.href);
 
-                    <div style="font-size:15px;color:#08011E;margin-left:20px;margin-top:32px"> ${
-                    d.data.Name
-                    } </div>
-                    <div style="color:#716E7B;margin-left:20px;margin-top:3px;font-size:10px;"> ${
-                    d.data.Role
-                    }<br />
-                    ${d.data.Team} </div>
-                </div>
-`;
+            chart.data(data[e.target.value])
+                .render()
+                .expandAll()
+        }
+        document.querySelector(customerDropdownSelector).addEventListener('change', refreshWithNewData)
 
-            })
-            .onNodeClick(d => {
-                const keys = Object.keys(d)
-                const table = `<table>
-                    ${keys.map(k => {
-                        if (k.startsWith('_')) { return null }
-                        if (['imageUrl','id','parentId','Color'].includes(k)) { return null }
-                        return `<tr>
-                            <th>${k}</th>
-                            <td>${d[k]}</td>
-                        </tr>`
-                    }).join("")}
-                    </table>
-                `           
-                const dialogHTML =  `
-                    <h4 class="mdl-dialog__title">${d.Name}</h4>
-                    <div class="mdl-dialog__content">
-                        ${table}
-                    </div>
-                `    
-                // alert(table)
-                // console.log({ userDetails: d })
-                
-                let content = dialog_user_details.querySelector('div#userDetails')
-                // console.log(content)
-                if (content != null) {
-                    content.innerHTML = dialogHTML;
-                } else {
-                    content = document.createElement('div');
-                    content.setAttribute('id','userDetails')
-                    content.innerHTML = dialogHTML;
-                    dialog_user_details.prepend(content)
-                }
-                dialog_user_details.showModal()
+        /**
+         * FILL CUSTOMER DROPDOWN
+         */
+        let customerSelDropdown = document.querySelector(customerDropdownSelector)
+        for (let i = 0, sheetCount = sheetNames.length; i < sheetCount; i++) {
+          const sheetName = sheetNames[i]
+          // <option value="option1">option 1</option>
+          const optionHTML = document.createElement('option')
+          optionHTML.setAttribute('value', sheetName)
+          optionHTML.textContent = sheetName
 
-            })
+          if (myParam == null && i == 0) {
+            optionHTML.setAttribute('selected', true)
+          } else if (myParam == sheetName) {
+            optionHTML.setAttribute('selected', true)
+            // refreshWithNewData({ target: { value: sheetName, id: "customerSel" } })
+          }
+          customerSelDropdown.insertAdjacentElement('beforeend', optionHTML)
+        }
 
-        // With JSON object
-        const dataStr = "<?= orgChartCSV ?>"
-        const data = JSON.parse(dataStr)
-
-        chart.data(data)
+        /**
+         * MENU BUTTON BEHAVIORS
+         */
+        const expandAll = () => {
+          console.log({ fn: "Expand All" })
+          chart.expandAll()
+        }
+        document.querySelector(expandAllSelector).addEventListener('click', expandAll)
+        
+        chart.data(data[myParam == null ? sheetNames[0] : myParam])
             .render()
             .expandAll()
-
-        // // With csv loading
-        // d3.csv(
-        //     'https://raw.githubusercontent.com/bumbeishvili/sample-data/main/org.csv'
-        // ).then(data => {
-        //     console.log({ data })
-        //     chart.data(data)
-        //         .render()
-        //         .expandAll()
-        // });
     </script>
-
-    <!-- <input type="button" value="Close"
-    onclick="google.script.host.close()" /> -->
-    <button
-        type="button"
-        class="mdl-button"
-        value="Close"
-        onclick="google.script.host.close()">
-            Close gScript
-    </button>
   </body>
 </html>
