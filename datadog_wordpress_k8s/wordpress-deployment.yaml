@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: wordpress
+    tier: frontend
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wp-pv-claim
+  labels:
+    app: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+    # tags.datadoghq.com/env: sandbox
+    # tags.datadoghq.com/service: wordpress-sandbox
+    # tags.datadoghq.com/version: "0.0.1"
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+        # tags.datadoghq.com/env: sandbox
+        # tags.datadoghq.com/service: wordpress-sandbox
+        # tags.datadoghq.com/version: "0.0.1"
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:6.2.1-apache
+        # image: docker.io/library/wordpress-apm:latest
+        imagePullPolicy: Never
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: wordpress-mysql
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        - name: WORDPRESS_DB_USER
+          value: wordpress
+        # - name: DD_ENV
+        #   valueFrom:
+        #     fieldRef:
+        #       fieldPath: metadata.labels['tags.datadoghq.com/env']
+        # - name: DD_SERVICE
+        #   valueFrom:
+        #     fieldRef:
+        #       fieldPath: metadata.labels['tags.datadoghq.com/service']
+        # - name: DD_VERSION
+        #   valueFrom:
+        #     fieldRef:
+        #       fieldPath: metadata.labels['tags.datadoghq.com/version']
+        # - name: DD_PROFILING_ENABLED
+        #   value: "true"
+        # - name: DD_TRACE_SAMPLE_RATE
+        #   value: "1"
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: wordpress-persistent-storage
+          mountPath: /var/www/html
+        # - name: apmsocketpath
+        #   mountPath: /var/run/datadog
+      volumes:
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+          claimName: wp-pv-claim
+      # - hostPath:
+      #     path: /var/run/datadog/
+      #   name: apmsocketpath

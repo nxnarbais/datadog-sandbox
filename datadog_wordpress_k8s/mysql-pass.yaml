@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  password: WU9VUl9QQVNTV09SRA==
+kind: Secret
+metadata:
+  name: mysql-pass
+type: Opaque
