@@ -27,12 +27,12 @@ For the secrets, follow the instructions below
 
 1. Copy and edit the `datadog_secret.yaml.example`: `cp datadog_secret.yaml.example datadog_secret.yaml`
     1. Add the encoded secrets
-1. Deploy the secrets: `kubectl -f datadog_secret.yaml`
+1. Deploy the secrets: `kubectl apply -f datadog_secret.yaml`
 
 *Note: You have an error message about PodDisruptionBudget? It looks like in k8s 1.26 it's not policy/v1beta1 but policy/v1.*
 
 Deploy the agent and the monitors:
-1. `kubectl apply -f datadog-agent-v1.yaml`
+1. `kubectl apply -f datadog-agent.yaml`
 1. `kubectl apply -f datadog-monitors.yaml`
 
 ## Check the new resources

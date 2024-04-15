@@ -1,0 +1,193 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app1-deployment
+  namespace: myapp
+  labels:
+    app: backend-app1
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "backend-app1"
+    tags.datadoghq.com/version: "0.1.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-app1
+  template:
+    metadata:
+      labels:
+        app: backend-app1
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "backend-app1"
+        tags.datadoghq.com/version: "0.1.0"
+        admission.datadoghq.com/enabled: "true"
+      annotations:
+        # https://docs.datadoghq.com/agent/configuration/secrets-management/?tab=linux#script-for-reading-from-multiple-secret-providers
+        # The `ENC[]` handle must be the entire YAML value
+        ad.datadoghq.com/backend-app1.checks: |
+          {
+            "http_check": {
+              "init_config": {},
+              "instances": [
+                {
+                  "name": "url_with_tag_secret",
+                  "url": "http://%%host%%:3000",
+                  "tags": ["ENC[k8s_secret@myapp/myapp-secret/something]"]
+                }
+              ]
+            }
+          }
+        admission.datadoghq.com/js-lib.version: "v4.11.1"
+        ad.datadoghq.com/backend-app1.logs: '[{"source":"fastify","service":"backend-app1"}]'
+    spec:
+      containers:
+      - name: backend-app1
+        image: node:16
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+          - name: DD_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_RUNTIME_METRICS_ENABLED
+            value: "true"
+          - name: DD_PROFILING_ENABLED
+            value: "true"
+          - name: DD_LOGS_INJECTION
+            value: "true"
+          - name: DD_TRACE_DEBUG
+            value: 'true'
+          - name: DD_TRACE_SAMPLE_RATE
+            value: "1"          
+          - name: DD_APPSEC_ENABLED
+            value: 'true'
+        ports:
+        - containerPort: 3000
+        workingDir: /home/node/app
+        command: ["npm", "run", "start"]
+        volumeMounts:
+        - mountPath: /home/node/app
+          name: backend-app1-volume
+      volumes:
+      - name: backend-app1-volume
+        hostPath:
+          path: /app/datadog-sandbox/datadog_operator_and_monitor/app1
+          type: Directory
+
+---
+# https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-app1-service
+  namespace: myapp
+spec:
+  selector:
+    app: backend-app1
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app2-deployment
+  namespace: myapp
+  labels:
+    app: backend-app2
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "backend-app2"
+    tags.datadoghq.com/version: "0.1.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-app2
+  template:
+    metadata:
+      labels:
+        app: backend-app2
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "backend-app2"
+        tags.datadoghq.com/version: "0.1.0"
+        admission.datadoghq.com/enabled: "true"
+      annotations:
+        admission.datadoghq.com/js-lib.version: "v4.11.1"
+        ad.datadoghq.com/backend-app2.logs: '[{"source":"fastify","service":"backend-app2"}]'
+    spec:
+      containers:
+      - name: backend-app2
+        image: node:16
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+          - name: DD_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_RUNTIME_METRICS_ENABLED
+            value: "true"
+          - name: DD_PROFILING_ENABLED
+            value: "true"
+          - name: DD_LOGS_INJECTION
+            value: "true"
+          - name: DD_TRACE_DEBUG
+            value: 'true'
+          - name: DD_TRACE_SAMPLE_RATE
+            value: "1"
+          - name: DD_APPSEC_ENABLED
+            value: 'true'
+        ports:
+        - containerPort: 3000
+        workingDir: /home/node/app
+        command: ["npm", "run", "start"]
+        volumeMounts:
+        - mountPath: /home/node/app
+          name: backend-app2-volume
+      volumes:
+      - name: backend-app2-volume
+        hostPath:
+          path: /app/datadog-sandbox/datadog_operator_and_monitor/app2
+          type: Directory
+
+---
+# https://minikube.sigs.k8s.io/docs/handbook/accessing/#using-minikube-tunnel
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-app2-service
+  namespace: myapp
+spec:
+  selector:
+    app: backend-app2
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 3000
+      nodePort: 30002
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: myapp-secret
+  namespace: myapp
+type: Opaque
+data:
+  # echo -n 'some_value' | base64
+  # echo -n 'abc' | base64 --decode
+  something: c2VjcmV0OnNvbWV0aGluZw==

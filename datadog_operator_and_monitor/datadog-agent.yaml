@@ -35,10 +35,10 @@ spec:
     orchestratorExplorer:
       enabled: true # default: true - https://docs.datadoghq.com/infrastructure/containers/?tab=docker#kubernetes-orchestrator-explorer
     # SECURITY
-    cws:
-      enabled: true
-    cspm:
-      enabled: true
+    # cws:
+    #   enabled: true
+    # cspm:
+    #   enabled: true
     # REMOTE CONFIG
     admissionController:
       enabled: true
@@ -47,9 +47,9 @@ spec:
   override:
     # Add overrides to the (Node) Agent 
     nodeAgent:
-      image:
-        name: agent
-        tag: 7.46.0
+      # image:
+      #   name: agent
+      #   tag: 7.46.0
       # Create a ConfigMap and mount in this "tcp_check.yaml" file
       extraConfd:
         configDataMap:
@@ -65,6 +65,9 @@ spec:
           env:
             - name: DD_REMOTE_CONFIGURATION_ENABLED
               value: "true"
+            # https://docs.datadoghq.com/agent/configuration/secrets-management/?tab=daemonset#multiple-providers-usage
+            - name: DD_SECRET_BACKEND_COMMAND
+              value: "/readsecret_multiple_providers.sh"
           resources:
             limits:
               cpu: 500m
